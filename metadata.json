@@ -1,0 +1,6 @@
+{
+  "name": "Sistema de Emissão de Certificados",
+  "description": "Sistema de emissão e geração de certificados em lote (PDF) ultra-rápido com modelo oficial SGEx / B ADM QGEX e importação CSV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
