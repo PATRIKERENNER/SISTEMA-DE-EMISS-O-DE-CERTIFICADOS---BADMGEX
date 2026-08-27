@@ -63,12 +63,16 @@ export async function initPdfAssets(): Promise<void> {
 }
 
 /**
- * Draws the ornate certificate border in A4 landscape (297 x 210 mm)
+ * Draws the ornate certificate border in A4 landscape (297 x 210 mm) with pure white background
  */
 function drawCertificateBorder(doc: jsPDF) {
   const margin = 8;
   const pageWidth = 297;
   const pageHeight = 210;
+
+  // Pure White Base Background (No shading or watermarks)
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
   // Outer primary black border
   doc.setDrawColor(20, 20, 20);
@@ -99,15 +103,6 @@ function drawCertificateBorder(doc: jsPDF) {
     );
     doc.circle(c.x + c.dx * 6, c.y + c.dy * 6, 2, 'F');
   });
-
-  // Soft watermark background in center (Subtle Monument Arch)
-  doc.setDrawColor(235, 235, 235);
-  doc.setFillColor(250, 250, 250);
-  doc.circle(148.5, 105, 45, 'F');
-  doc.setDrawColor(220, 220, 220);
-  doc.setLineWidth(0.8);
-  // Monument Arch silhouette
-  doc.ellipse(148.5, 125, 40, 15, 'S');
 }
 
 /**
@@ -266,8 +261,8 @@ export function renderCertificateBack(
   const tableWidth = pageWidth - 44; // 253mm
   const colWidths = [75, 40, 38, 100]; // Total: 253mm
 
-  // Table Header
-  doc.setFillColor(241, 245, 249);
+  // Table Header (Pure White)
+  doc.setFillColor(255, 255, 255);
   doc.rect(tableX, tableY, tableWidth, 12, 'FD');
   doc.setDrawColor(30, 41, 59);
   doc.setLineWidth(0.6);
@@ -305,12 +300,8 @@ export function renderCertificateBack(
   const rowHeight = 22;
 
   config.disciplinas.forEach((disc, idx) => {
-    // Alternating row background
-    if (idx % 2 === 1) {
-      doc.setFillColor(248, 250, 252);
-    } else {
-      doc.setFillColor(255, 255, 255);
-    }
+    // Pure White row background
+    doc.setFillColor(255, 255, 255);
     doc.rect(tableX, rowY, tableWidth, rowHeight, 'FD');
 
     // Row borders

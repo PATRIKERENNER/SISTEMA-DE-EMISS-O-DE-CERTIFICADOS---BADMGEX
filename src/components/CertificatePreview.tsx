@@ -201,11 +201,6 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
           }}
           className="relative bg-white text-slate-900 shadow-2xl rounded-sm p-10 flex flex-col justify-between select-none border-2 border-slate-900"
         >
-          {/* Subtle Watermark Landscape */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-radial from-slate-900 to-transparent flex items-center justify-center overflow-hidden">
-            <div className="w-[600px] h-[300px] border-8 border-slate-800 rounded-t-full"></div>
-          </div>
-
           {/* Ornate Baroque Corners */}
           <div className="absolute top-2 left-2 pointer-events-none">
             <BaroqueCorner className="w-16 h-16" />
@@ -385,7 +380,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   <h3 className="text-sm font-bold text-slate-800 tracking-wider">
                     “FORTE CAXIAS”
                   </h3>
-                  <div className="mt-2 inline-block bg-slate-100 px-4 py-0.5 rounded-full border border-slate-300">
+                  <div className="mt-2 inline-block bg-white px-4 py-0.5 rounded-full border border-slate-300">
                     <span className="text-xs font-extrabold text-slate-800 tracking-widest uppercase">
                       CONTEÚDO PROGRAMÁTICO
                     </span>
@@ -402,9 +397,9 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
               {/* Table */}
               <div className="my-auto">
-                <table className="w-full border-collapse border-2 border-slate-900 text-center">
+                <table className="w-full border-collapse border-2 border-slate-900 text-center bg-white">
                   <thead>
-                    <tr className="bg-slate-100 border-b-2 border-slate-900">
+                    <tr className="bg-white border-b-2 border-slate-900">
                       <th className="py-2.5 px-4 text-xs font-extrabold text-slate-900 border-r border-slate-900 uppercase tracking-wider w-[32%]">
                         DISCIPLINA
                       </th>
@@ -432,9 +427,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       return (
                         <tr
                           key={disc.id}
-                          className={`border-b border-slate-800 ${
-                            idx % 2 === 1 ? 'bg-slate-50/70' : 'bg-white'
-                          }`}
+                          className="border-b border-slate-800 bg-white"
                         >
                           <td className="py-3 px-4 text-xs font-bold text-slate-900 border-r border-slate-800 text-left">
                             {disc.nome}
