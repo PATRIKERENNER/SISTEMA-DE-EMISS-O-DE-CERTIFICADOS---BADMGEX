@@ -2,135 +2,63 @@ import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Participant, CourseConfig, GenerationBenchmark } from '../types';
+import { SGEX_BASE64_PNG, BADM_BASE64_PNG } from '../data/officialLogosBase64';
 
 /**
- * Pre-renders an SVG string to a Base64 PNG image using an offscreen canvas
- * for lightning-fast embedding into jsPDF.
+ * Loads an image from URL/path and returns base64 data URL
  */
-async function svgToDataUrl(svgString: string, width = 300, height = 390): Promise<string> {
+async function loadImageAsDataUrl(src: string): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, width, height);
-        ctx.drawImage(img, 0, width === height ? height : width, width, height);
-        // Better draw
-        ctx.clearRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/png');
-        URL.revokeObjectURL(url);
-        resolve(dataUrl);
-      } else {
-        URL.revokeObjectURL(url);
-        resolve('');
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/png');
+          resolve(dataUrl);
+          return;
+        }
+      } catch (e) {
+        console.warn('Canvas export fallback', e);
       }
+      resolve(src);
     };
     img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve('');
+      resolve(src);
     };
-    img.src = url;
+    img.src = src;
   });
 }
 
-// Cached SVG Assets to prevent repeated conversions
-let cachedSGExPng = '';
-let cachedBAdmPng = '';
+// Cached Official Image Assets directly from /public directory
+let cachedSGExPng = SGEX_BASE64_PNG;
+let cachedBAdmPng = BADM_BASE64_PNG;
 let cachedSignaturePng = '';
 
-const SGEX_SVG = `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 16 12 H 184 V 162 C 184 224, 100 250, 100 250 C 100 250, 16 224, 16 162 Z" fill="#FFCA08" stroke="#D49000" stroke-width="1.5"/>
-  <path d="M 20 16 H 180 V 68 H 20 Z" fill="#D91023"/>
-  <rect x="20" y="32" width="160" height="32" fill="#0671CE" stroke="#FFCA08" stroke-width="2"/>
-  <text x="100" y="56" text-anchor="middle" fill="#FFFFFF" stroke="#FFD700" stroke-width="1" font-family="Times New Roman, serif" font-weight="900" font-size="25" letter-spacing="4">S G EX</text>
-  <path d="M 20 68 H 180 V 160 C 180 218, 100 244, 100 244 C 100 244, 20 218, 20 160 Z" fill="#D91023"/>
-  <polygon points="100,74 174,152 100,230 26,152" fill="#FFFFFF"/>
-  <g>
-    <line x1="48" y1="184" x2="148" y2="114" stroke="#B84A04" stroke-width="4.5" stroke-linecap="round"/>
-    <line x1="48" y1="184" x2="148" y2="114" stroke="#E68A00" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M 44 186 C 40 190, 48 200, 56 194 C 62 188, 54 180, 48 184" fill="#E68A00" stroke="#7A2E00" stroke-width="1.5"/>
-    <circle cx="43" cy="188" r="3.5" fill="#B84A04"/>
-  </g>
-  <g>
-    <line x1="152" y1="184" x2="52" y2="114" stroke="#B84A04" stroke-width="4.5" stroke-linecap="round"/>
-    <line x1="152" y1="184" x2="52" y2="114" stroke="#E68A00" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M 156 186 C 160 190, 152 200, 144 194 C 138 188, 146 180, 152 184" fill="#E68A00" stroke="#7A2E00" stroke-width="1.5"/>
-    <circle cx="157" cy="188" r="3.5" fill="#B84A04"/>
-  </g>
-  <g>
-    <line x1="100" y1="94" x2="100" y2="216" stroke="#8C1D04" stroke-width="4" stroke-linecap="round"/>
-    <line x1="100" y1="94" x2="100" y2="212" stroke="#E68A00" stroke-width="2" stroke-linecap="round"/>
-    <path d="M 100 94 C 95 102, 95 110, 100 114 C 105 110, 105 102, 100 94 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 96 C 97 103, 97 108, 100 112 C 103 108, 103 103, 100 96 Z" fill="#E68A00"/>
-    <path d="M 100 110 C 90 116, 88 128, 100 134 C 100 134, 100 110, 100 110 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 110 C 110 116, 112 128, 100 134 C 100 134, 100 110, 100 110 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 113 C 93 118, 92 125, 100 130 Z" fill="#E68A00"/>
-    <path d="M 100 113 C 107 118, 108 125, 100 130 Z" fill="#E68A00"/>
-    <path d="M 100 130 C 88 138, 86 152, 100 158 C 100 158, 100 130, 100 130 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 130 C 112 138, 114 152, 100 158 C 100 158, 100 130, 100 130 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 133 C 91 140, 90 148, 100 154 Z" fill="#E68A00"/>
-    <path d="M 100 133 C 109 140, 110 148, 100 154 Z" fill="#E68A00"/>
-    <path d="M 100 154 C 90 162, 88 174, 100 180 C 100 180, 100 154, 100 154 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 154 C 110 162, 112 174, 100 180 C 100 180, 100 154, 100 154 Z" fill="#C81820" stroke="#7A0000" stroke-width="1"/>
-    <path d="M 100 157 C 92 164, 91 170, 100 176 Z" fill="#E68A00"/>
-    <path d="M 100 157 C 108 164, 109 170, 100 176 Z" fill="#E68A00"/>
-    <polygon points="98,180 102,180 101,216 99,216" fill="#8C1D04"/>
-    <polygon points="99,206 101,206 100.5,216 99.5,216" fill="#FFCA08"/>
-  </g>
-</svg>`;
-
-const BADM_SVG = `<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 16 12 H 184 V 162 C 184 224, 100 250, 100 250 C 100 250, 16 224, 16 162 Z" fill="#FFCA08" stroke="#D49000" stroke-width="1.5"/>
-  <path d="M 20 16 H 180 V 66 H 20 Z" fill="#D91023"/>
-  <rect x="20" y="30" width="160" height="30" fill="#0C4AA6" stroke="#FFCA08" stroke-width="2"/>
-  <text x="100" y="53" text-anchor="middle" fill="#FFFFFF" stroke="#FFD700" stroke-width="0.9" font-family="Times New Roman, serif" font-weight="900" font-size="17" letter-spacing="1">B ADM QGEX</text>
-  <path d="M 20 66 H 180 V 160 C 180 218, 100 244, 100 244 C 100 244, 20 218, 20 160 Z" fill="#D91023"/>
-  <path d="M 36 80 H 164 V 156 C 164 204, 100 228, 100 228 C 100 228, 36 204, 36 156 Z" fill="#FFFFFF" stroke="#D91023" stroke-width="2"/>
-  <g stroke="#A65B12" fill="none">
-    <line x1="50" y1="134" x2="150" y2="134" stroke="#A65B12" stroke-width="3" stroke-linecap="round"/>
-    <polygon points="73,90 77,90 80,134 70,134" fill="#A65B12" stroke="#7A3E05" stroke-width="1"/>
-    <path d="M 55 132 C 54 116, 110 114, 146 134" stroke="#A65B12" stroke-width="3.5"/>
-    <path d="M 66 134 C 70 123, 106 122, 136 134" stroke="#A65B12" stroke-width="2"/>
-    <line x1="126" y1="128" x2="128" y2="134" stroke="#A65B12" stroke-width="2"/>
-  </g>
-  <g>
-    <polygon points="100,144 96,150 96,192 104,192 104,150" fill="#E68A00" stroke="#7A3E05" stroke-width="1.2"/>
-    <line x1="100" y1="145" x2="100" y2="192" stroke="#FFF" stroke-width="1"/>
-    <rect x="88" y="192" width="24" height="4" rx="2" fill="#A65B12" stroke="#7A3E05" stroke-width="1"/>
-    <rect x="97.5" y="196" width="5" height="12" fill="#7A3E05"/>
-    <circle cx="100" cy="211" r="3.5" fill="#A65B12" stroke="#7A3E05" stroke-width="1"/>
-    <ellipse cx="86" cy="180" rx="3.5" ry="8" transform="rotate(-40 86 180)" fill="#C87A1E" stroke="#7A3E05" stroke-width="0.8"/>
-    <ellipse cx="78" cy="172" rx="3.5" ry="7.5" transform="rotate(-55 78 172)" fill="#E68A00" stroke="#7A3E05" stroke-width="0.8"/>
-    <ellipse cx="114" cy="180" rx="3.5" ry="8" transform="rotate(40 114 180)" fill="#C87A1E" stroke="#7A3E05" stroke-width="0.8"/>
-    <ellipse cx="122" cy="172" rx="3.5" ry="7.5" transform="rotate(55 122 172)" fill="#E68A00" stroke="#7A3E05" stroke-width="0.8"/>
-    <path d="M 94 195 C 90 198, 92 203, 97 200 C 95 197, 95 195, 94 195 Z" fill="#A65B12" stroke="#7A3E05" stroke-width="0.7"/>
-    <path d="M 106 195 C 110 198, 108 203, 103 200 C 105 197, 105 195, 106 195 Z" fill="#A65B12" stroke="#7A3E05" stroke-width="0.7"/>
-  </g>
-</svg>`;
-
-const SIGNATURE_SVG = `<svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 25 52 C 20 40, 30 18, 48 20 C 62 22, 60 48, 45 58 C 30 65, 22 50, 35 35 C 50 18, 70 30, 75 48 C 78 58, 88 32, 95 38 C 102 44, 98 60, 110 42 C 118 30, 128 35, 132 48 C 136 60, 148 35, 155 42 C 160 48, 158 58, 170 45 C 180 32, 195 30, 185 55 C 175 75, 130 68, 85 64 C 45 60, 15 58, 65 52 C 115 46, 175 42, 215 48" fill="none" stroke="#1E40AF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
 /**
- * Initialize image cache
+ * Initialize image cache with the exact images from /public
  */
 export async function initPdfAssets(): Promise<void> {
-  if (!cachedSGExPng) {
-    cachedSGExPng = await svgToDataUrl(SGEX_SVG, 400, 520);
-  }
-  if (!cachedBAdmPng) {
-    cachedBAdmPng = await svgToDataUrl(BADM_SVG, 400, 520);
-  }
-  if (!cachedSignaturePng) {
-    cachedSignaturePng = await svgToDataUrl(SIGNATURE_SVG, 240, 80);
+  try {
+    const [sgex, badm] = await Promise.all([
+      loadImageAsDataUrl('/Secretaria-Geral redimen.png'),
+      loadImageAsDataUrl('/badmqgex.min.png'),
+    ]);
+    if (sgex && sgex.startsWith('data:image')) {
+      cachedSGExPng = sgex;
+    }
+    if (badm && badm.startsWith('data:image')) {
+      cachedBAdmPng = badm;
+    }
+  } catch {
+    // Fallback to embedded official base64 if fetch fails
+    cachedSGExPng = SGEX_BASE64_PNG;
+    cachedBAdmPng = BADM_BASE64_PNG;
   }
 }
 
