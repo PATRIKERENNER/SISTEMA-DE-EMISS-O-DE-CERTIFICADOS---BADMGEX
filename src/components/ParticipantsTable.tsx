@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Participant, CourseConfig } from '../types';
-import { Search, UserPlus, Trash2, Edit2, Eye, Download, Check, X, Users, AlertTriangle } from 'lucide-react';
+import { Search, UserPlus, Trash2, Edit2, Eye, Download, Check, X, Users, AlertTriangle, FileSpreadsheet } from 'lucide-react';
 import { downloadSingleCertificate } from '../services/pdfGenerator';
+import { exportParticipantsToExcel } from '../services/spreadsheetService';
 
 interface ParticipantsTableProps {
   participants: Participant[];
@@ -114,6 +115,19 @@ export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
               className="text-xs pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 w-48 sm:w-60 bg-slate-50/50"
             />
           </div>
+
+          {/* Export to Excel */}
+          {participants.length > 0 && (
+            <button
+              id="btn-export-excel"
+              onClick={() => exportParticipantsToExcel(participants, config.nomeCurso || 'curso')}
+              className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition"
+              title="Exportar lista atual para planilha Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Exportar Excel</span>
+            </button>
+          )}
 
           {/* Add Manual */}
           <button

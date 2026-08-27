@@ -44,10 +44,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h4 className="font-bold text-slate-900 text-sm">
-                Carregar os Alunos (Via Planilha CSV ou Cadastro Manual)
+                Carregar os Alunos (Via Planilha Excel .xlsx ou CSV)
               </h4>
               <p className="text-xs text-slate-600 mt-1">
-                Basta arrastar sua planilha Excel/CSV contendo as colunas <em>Nome, CPF, Registro, Categoria</em> para a área de importação, ou baixar o modelo pronto clicando em <strong className="text-blue-700">"Baixar Modelo CSV"</strong>.
+                Basta arrastar seu arquivo <strong>Excel (.xlsx / .xls)</strong> ou <strong>CSV</strong> contendo as colunas <em>Nome, CPF, Registro, Categoria, Notas...</em> para a área de importação. Você também pode baixar o modelo pronto clicando em <strong className="text-emerald-700">"Baixar Modelo Excel (.xlsx)"</strong> ou <strong className="text-blue-700">"Baixar Modelo (.csv)"</strong>.
               </p>
             </div>
           </div>

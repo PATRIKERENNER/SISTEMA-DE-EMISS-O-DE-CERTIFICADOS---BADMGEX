@@ -124,7 +124,7 @@ export default function App() {
               <Zap className="w-4 h-4 fill-white" />
               {participants.length > 0
                 ? `Gerar Certificados (${participants.length})`
-                : 'Importar Planilha CSV'}
+                : 'Importar Planilha (Excel / CSV)'}
             </button>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function App() {
             }`}
           >
             <Users className="w-4 h-4" />
-            Alunos & Planilha CSV
+            Alunos & Planilha (Excel / CSV)
             <span className={`text-[11px] px-2 py-0.2 rounded-full font-bold ${
               activeTab === 'participants' ? 'bg-white text-blue-700' : 'bg-slate-100 text-slate-600'
             }`}>
@@ -181,21 +181,21 @@ export default function App() {
           <div className="flex flex-col gap-6 animate-fade-in">
             {participants.length === 0 ? (
               <div className="bg-white p-12 rounded-xl border border-slate-200 text-center flex flex-col items-center gap-4 shadow-sm">
-                <div className="w-16 h-16 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <FileSpreadsheet className="w-8 h-8" />
                 </div>
                 <h3 className="text-base font-bold text-slate-800">
                   Nenhum aluno carregado no momento
                 </h3>
                 <p className="text-xs text-slate-500 max-w-md">
-                  Importe sua planilha CSV na aba "Alunos & Planilha CSV" para visualizar a prévia e emitir os certificados oficiais.
+                  Importe sua planilha Excel (.xlsx) ou CSV na aba "Alunos & Planilha" para visualizar a prévia e emitir os certificados oficiais.
                 </p>
                 <button
                   onClick={() => setActiveTab('participants')}
-                  className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
+                  className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
-                  Ir para Importação de Planilha CSV
+                  Importar Planilha Excel (.xlsx) / CSV
                 </button>
               </div>
             ) : (
