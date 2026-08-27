@@ -14,6 +14,13 @@ export interface Participant {
   notaConvivio?: string;
 }
 
+export interface SignatureItem {
+  id: string;
+  nome: string;
+  cargo: string;
+  cpf?: string;
+}
+
 export interface DisciplineItem {
   id: string;
   nome: string;
@@ -34,9 +41,10 @@ export interface CourseConfig {
   cargaHorariaGeral: string; // ex: 50h/a
   validadeAnos: string; // ex: cinco anos
   localDataGeral: string; // ex: Brasília-DF, 18 de junho de 2026
-  nomeDiretor: string; // ex: Carlos Henrique Ferreira De Mello
-  cargoDiretor: string; // ex: Diretor Geral
-  cpfDiretor: string; // ex: 981.050.007-68
+  nomeDiretor?: string; // legacy fallback
+  cargoDiretor?: string; // legacy fallback
+  cpfDiretor?: string; // legacy fallback
+  assinaturas: SignatureItem[];
   cnpj: string; // ex: 21.744.847/0001-50
   nomeUnidade: string; // ex: BASE ADMINISTRATIVA DO QUARTEL-GENERAL DO EXÉRCITO
   incluirVerso: boolean;

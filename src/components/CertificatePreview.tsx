@@ -344,42 +344,122 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
               </div>
 
               {/* Signatures & Footer Section */}
-              <div className="flex items-end justify-between pt-2 px-2 border-t border-transparent">
-                {/* Director Signature */}
-                <div className="flex flex-col items-center text-center">
-                  <div className="h-10 flex items-end justify-center">
-                    {config.incluirAssinaturaImagem && (
-                      <DirectorSignature className="w-40 h-14 -mb-3" />
-                    )}
-                  </div>
-                  <div className="w-60 border-t border-slate-800 pt-1">
-                    {config.nomeDiretor && (
-                      <p className="text-xs font-bold text-slate-900 leading-tight">
-                        {config.nomeDiretor}
-                      </p>
-                    )}
-                    {config.cargoDiretor && (
-                      <p className="text-[11px] text-slate-700 leading-tight">
-                        {config.cargoDiretor}
-                      </p>
-                    )}
-                    {config.cpfDiretor && (
-                      <p className="text-[10px] text-slate-600 font-mono">
-                        {config.cpfDiretor}
-                      </p>
-                    )}
-                  </div>
-                </div>
+              <div className="pt-2 px-2 border-t border-transparent flex flex-col gap-3">
+                {/* Dynamic Signatures Row */}
+                {(() => {
+                  const activeSignatures = (config.assinaturas && config.assinaturas.length > 0)
+                    ? config.assinaturas
+                    : (config.nomeDiretor || config.cargoDiretor)
+                    ? [
+                        {
+                          id: 'sig-1',
+                          nome: config.nomeDiretor || '',
+                          cargo: config.cargoDiretor || '',
+                          cpf: config.cpfDiretor || '',
+                        },
+                      ]
+                    : [];
 
-                {/* CNPJ & Military Unit Footer */}
-                <div className="text-right">
-                  <p className="text-[11px] font-bold text-slate-900 tracking-wider">
-                    {config.cnpj}
-                  </p>
-                  <p className="text-[10px] font-semibold text-slate-700 tracking-tight uppercase">
-                    {config.nomeUnidade}
-                  </p>
-                </div>
+                  if (activeSignatures.length === 0) {
+                    return (
+                      <div className="flex items-end justify-between">
+                        <div className="w-56 border-t border-slate-800 pt-1 text-center">
+                          <p className="text-xs font-bold text-slate-900">Assinatura da Autoridade</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] font-bold text-slate-900 tracking-wider">
+                            {config.cnpj}
+                          </p>
+                          <p className="text-[10px] font-semibold text-slate-700 tracking-tight uppercase">
+                            {config.nomeUnidade}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (activeSignatures.length === 1) {
+                    const sig = activeSignatures[0];
+                    return (
+                      <div className="flex items-end justify-between">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="h-8 flex items-end justify-center">
+                            {config.incluirAssinaturaImagem && (
+                              <DirectorSignature className="w-36 h-12 -mb-2" />
+                            )}
+                          </div>
+                          <div className="w-60 border-t border-slate-900 pt-1">
+                            {sig.nome && (
+                              <p className="text-xs font-bold text-slate-900 leading-tight">
+                                {sig.nome}
+                              </p>
+                            )}
+                            {sig.cargo && (
+                              <p className="text-[11px] text-slate-700 leading-tight">
+                                {sig.cargo}
+                              </p>
+                            )}
+                            {sig.cpf && (
+                              <p className="text-[10px] text-slate-600 font-mono">
+                                {sig.cpf}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* CNPJ & Military Unit Footer */}
+                        <div className="text-right">
+                          <p className="text-[11px] font-bold text-slate-900 tracking-wider">
+                            {config.cnpj}
+                          </p>
+                          <p className="text-[10px] font-semibold text-slate-700 tracking-tight uppercase">
+                            {config.nomeUnidade}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // 2, 3 or more signatures
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-start justify-around gap-4 w-full">
+                        {activeSignatures.map((sig, idx) => (
+                          <div key={sig.id || `sig-${idx}`} className="flex-1 max-w-[220px] flex flex-col items-center text-center">
+                            <div className="h-7 flex items-end justify-center">
+                              {idx === 0 && config.incluirAssinaturaImagem && (
+                                <DirectorSignature className="w-32 h-10 -mb-2" />
+                              )}
+                            </div>
+                            <div className="w-full border-t border-slate-900 pt-1">
+                              {sig.nome && (
+                                <p className="text-[11px] font-bold text-slate-900 leading-tight">
+                                  {sig.nome}
+                                </p>
+                              )}
+                              {sig.cargo && (
+                                <p className="text-[10px] text-slate-700 leading-tight mt-0.5">
+                                  {sig.cargo}
+                                </p>
+                              )}
+                              {sig.cpf && (
+                                <p className="text-[9.5px] text-slate-600 font-mono">
+                                  {sig.cpf}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CNPJ & Military Unit Footer centered below multi-signatures */}
+                      <div className="text-center pt-1 border-t border-slate-200/60 flex items-center justify-between text-slate-700 text-[10px] font-semibold">
+                        <span>{config.nomeUnidade}</span>
+                        <span className="font-bold font-mono">{config.cnpj}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           ) : (

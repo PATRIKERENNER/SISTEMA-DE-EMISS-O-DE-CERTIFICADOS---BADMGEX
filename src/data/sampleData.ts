@@ -15,6 +15,26 @@ export const DEFAULT_COURSE_CONFIG: CourseConfig = {
   nomeDiretor: 'Carlos Henrique Ferreira De Mello',
   cargoDiretor: 'Diretor Geral',
   cpfDiretor: '981.050.007-68',
+  assinaturas: [
+    {
+      id: 'sig-1',
+      nome: 'Carlos Henrique Ferreira De Mello',
+      cargo: 'Diretor Geral',
+      cpf: '981.050.007-68',
+    },
+    {
+      id: 'sig-2',
+      nome: 'Paulo de Jesus Camargo',
+      cargo: 'Coordenador de Ensino',
+      cpf: '000.000.000-00',
+    },
+    {
+      id: 'sig-3',
+      nome: 'Erik Andre Rodrigues Santiago',
+      cargo: 'Instrutor / Responsável Técnico',
+      cpf: '111.222.333-44',
+    },
+  ],
   cnpj: 'CNPJ Nº 21.744.847/0001-50',
   nomeUnidade: 'BASE ADMINISTRATIVA DO QUARTEL-GENERAL DO EXÉRCITO',
   incluirVerso: true,

@@ -174,47 +174,118 @@ export function renderCertificateFront(
 
   // 8. Issue Date (Center-bottom)
   const dataEmissao = participant.dataEmissao || config.localDataGeral;
-  currentY = 150;
+  currentY = 149;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(15, 23, 42);
   doc.text(dataEmissao, pageWidth / 2, currentY, { align: 'center' });
 
-  // 9. Director General Signature (Left Bottom)
-  if (config.incluirAssinaturaImagem && cachedSignaturePng) {
-    doc.addImage(cachedSignaturePng, 'PNG', 32, 160, 48, 16);
-  }
-  doc.setDrawColor(100, 116, 139);
-  doc.setLineWidth(0.3);
-  doc.line(26, 178, 86, 178);
+  // 9. Dynamic Signatures & Footer Section
+  const activeSignatures = (config.assinaturas && config.assinaturas.length > 0)
+    ? config.assinaturas
+    : (config.nomeDiretor || config.cargoDiretor)
+    ? [
+        {
+          id: 'sig-1',
+          nome: config.nomeDiretor || '',
+          cargo: config.cargoDiretor || '',
+          cpf: config.cpfDiretor || '',
+        },
+      ]
+    : [];
 
-  if (config.nomeDiretor) {
+  if (activeSignatures.length <= 1) {
+    // Single signature (Left side) + Footer (Right side)
+    const sig = activeSignatures[0];
+    if (config.incluirAssinaturaImagem && cachedSignaturePng) {
+      doc.addImage(cachedSignaturePng, 'PNG', 32, 160, 48, 16);
+    }
+    doc.setDrawColor(100, 116, 139);
+    doc.setLineWidth(0.3);
+    doc.line(26, 178, 86, 178);
+
+    if (sig?.nome) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(sig.nome, 56, 183, { align: 'center' });
+    }
+
+    if (sig?.cargo) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(30, 41, 59);
+      doc.text(sig.cargo, 56, 187, { align: 'center' });
+    }
+
+    if (sig?.cpf) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(50, 60, 80);
+      doc.text(sig.cpf, 56, 191, { align: 'center' });
+    }
+
+    // Military Base Unit / CNPJ Footer (Right Bottom)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setTextColor(15, 23, 42);
-    doc.text(config.nomeDiretor, 56, 183, { align: 'center' });
-  }
+    doc.text(config.cnpj, pageWidth - 26, 185, { align: 'right' });
+    doc.setFontSize(7.5);
+    doc.text(config.nomeUnidade, pageWidth - 26, 190, { align: 'right' });
+  } else {
+    // Multiple signatures (2, 3 or more) distributed horizontally
+    const numSigs = activeSignatures.length;
+    const startX = 26;
+    const totalWidth = 245; // 297 - 52
+    const lineWidth = Math.min(64, Math.floor(totalWidth / numSigs - 8));
+    const step = totalWidth / numSigs;
 
-  if (config.cargoDiretor) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(30, 41, 59);
-    doc.text(config.cargoDiretor, 56, 187, { align: 'center' });
-  }
+    activeSignatures.forEach((sig, index) => {
+      const centerX = startX + step * index + step / 2;
+      const lineStartX = centerX - lineWidth / 2;
+      const lineEndX = centerX + lineWidth / 2;
 
-  if (config.cpfDiretor) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+      // Draw signature line
+      doc.setDrawColor(100, 116, 139);
+      doc.setLineWidth(0.3);
+      doc.line(lineStartX, 176, lineEndX, 176);
+
+      if (index === 0 && config.incluirAssinaturaImagem && cachedSignaturePng) {
+        doc.addImage(cachedSignaturePng, 'PNG', centerX - 24, 159, 48, 16);
+      }
+
+      let lineY = 180.5;
+      if (sig.nome) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(sig.nome, centerX, lineY, { align: 'center', maxWidth: lineWidth + 4 });
+        lineY += 4;
+      }
+
+      if (sig.cargo) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(30, 41, 59);
+        doc.text(sig.cargo, centerX, lineY, { align: 'center', maxWidth: lineWidth + 4 });
+        lineY += 3.5;
+      }
+
+      if (sig.cpf) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(70, 80, 95);
+        doc.text(sig.cpf, centerX, lineY, { align: 'center', maxWidth: lineWidth + 4 });
+      }
+    });
+
+    // Sub-footer below multiple signatures
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
     doc.setTextColor(50, 60, 80);
-    doc.text(config.cpfDiretor, 56, 191, { align: 'center' });
+    doc.text(config.nomeUnidade, 26, 197);
+    doc.text(config.cnpj, pageWidth - 26, 197, { align: 'right' });
   }
-
-  // 10. Military Base Unit / CNPJ Footer (Right Bottom)
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.text(config.cnpj, pageWidth - 26, 185, { align: 'right' });
-  doc.setFontSize(7.5);
-  doc.text(config.nomeUnidade, pageWidth - 26, 190, { align: 'right' });
 }
 
 /**
