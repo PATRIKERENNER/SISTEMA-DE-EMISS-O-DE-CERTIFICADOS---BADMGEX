@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import { Participant } from '../types';
-import { INITIAL_PARTICIPANTS, CSV_SAMPLE_TEXT } from '../data/sampleData';
-import { Upload, FileSpreadsheet, Download, RefreshCw, CheckCircle, AlertCircle, FileUp, Sparkles } from 'lucide-react';
+import { CSV_SAMPLE_TEXT } from '../data/sampleData';
+import { FileSpreadsheet, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { saveAs } from 'file-saver';
 
 interface CsvUploaderProps {
@@ -21,14 +21,7 @@ export const CsvUploader: React.FC<CsvUploaderProps> = ({
 
   const downloadSampleCsv = () => {
     const blob = new Blob([CSV_SAMPLE_TEXT], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'modelo_importacao_certificados_15_alunos.csv');
-  };
-
-  const loadDefault15 = () => {
-    onLoadParticipants(INITIAL_PARTICIPANTS);
-    setSuccessMessage('15 alunos modelo do Exército Brasileiro carregados com sucesso!');
-    setErrorMessage(null);
-    setTimeout(() => setSuccessMessage(null), 4000);
+    saveAs(blob, 'modelo_planilha_certificados.csv');
   };
 
   const processCsvFile = (file: File) => {
@@ -168,27 +161,17 @@ export const CsvUploader: React.FC<CsvUploaderProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
         <div className="flex items-center gap-2">
           <button
-            id="btn-load-sample-15"
-            onClick={loadDefault15}
-            className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition"
-            title="Carrega os 15 alunos de exemplo para teste rápido do requisito de 1 minuto"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Carregar 15 Alunos Modelo
-          </button>
-
-          <button
             id="btn-download-sample-csv"
             onClick={downloadSampleCsv}
             className="flex items-center gap-1.5 bg-white hover:bg-slate-50 active:scale-98 text-slate-700 border border-slate-200 text-xs font-semibold px-3.5 py-2 rounded-xl shadow-2xs transition"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
-            Baixar Modelo CSV
+            Baixar Modelo CSV (Planilha)
           </button>
         </div>
 
         <div className="text-xs font-medium text-slate-600">
-          Total atual: <strong className="text-slate-900 font-bold">{currentCount}</strong> participantes
+          Total carregado: <strong className="text-slate-900 font-bold">{currentCount}</strong> participantes
         </div>
       </div>
 

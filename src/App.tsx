@@ -112,11 +112,19 @@ export default function App() {
 
             <button
               id="btn-quick-run-batch"
-              onClick={() => setIsBatchModalOpen(true)}
+              onClick={() => {
+                if (participants.length === 0) {
+                  setActiveTab('participants');
+                } else {
+                  setIsBatchModalOpen(true);
+                }
+              }}
               className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-md shadow-blue-200/50 transition border border-blue-600"
             >
               <Zap className="w-4 h-4 fill-white" />
-              Testar Cronômetro (15 Alunos)
+              {participants.length > 0
+                ? `Gerar Certificados (${participants.length})`
+                : 'Importar Planilha CSV'}
             </button>
           </div>
         </div>
@@ -174,22 +182,20 @@ export default function App() {
             {participants.length === 0 ? (
               <div className="bg-white p-12 rounded-xl border border-slate-200 text-center flex flex-col items-center gap-4 shadow-sm">
                 <div className="w-16 h-16 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Users className="w-8 h-8" />
+                  <FileSpreadsheet className="w-8 h-8" />
                 </div>
                 <h3 className="text-base font-bold text-slate-800">
                   Nenhum aluno carregado no momento
                 </h3>
                 <p className="text-xs text-slate-500 max-w-md">
-                  Importe sua planilha CSV ou carregue os 15 alunos modelo para visualizar e emitir os certificados.
+                  Importe sua planilha CSV na aba "Alunos & Planilha CSV" para visualizar a prévia e emitir os certificados oficiais.
                 </p>
                 <button
-                  onClick={() => {
-                    setParticipants(INITIAL_PARTICIPANTS);
-                    setSelectedParticipantIndex(0);
-                  }}
-                  className="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-sm"
+                  onClick={() => setActiveTab('participants')}
+                  className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
                 >
-                  Carregar 15 Alunos Modelo do Exército
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Ir para Importação de Planilha CSV
                 </button>
               </div>
             ) : (

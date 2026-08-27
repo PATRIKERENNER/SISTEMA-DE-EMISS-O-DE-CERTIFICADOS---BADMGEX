@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-md shadow-blue-200/50 transition border border-blue-600"
         >
           <Zap className="w-4 h-4 fill-white" />
-          <span>Emitir {totalParticipants} Certificados</span>
+          <span>{totalParticipants > 0 ? `Emitir ${totalParticipants} Certificados` : 'Emitir Certificados'}</span>
         </button>
 
         <div className="hidden lg:flex w-8 h-8 rounded-full bg-slate-100 border border-slate-200 items-center justify-center text-xs font-bold text-slate-600" title="Perfil Militar / Operador">

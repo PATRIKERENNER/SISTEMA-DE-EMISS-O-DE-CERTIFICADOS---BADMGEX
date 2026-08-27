@@ -149,100 +149,122 @@ export const BatchGeneratorModal: React.FC<BatchGeneratorModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 flex flex-col gap-6">
-          {/* Real-time Chronometer / Benchmark Display */}
-          <div className="bg-slate-900 text-white p-6 rounded-xl border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden">
-            {/* Subtle glowing background */}
-            <div className="absolute inset-0 bg-radial from-blue-900/30 to-transparent pointer-events-none"></div>
-
-            <div className="flex items-center gap-2 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              <Timer className="w-4 h-4 animate-pulse" />
-              Cronômetro de Validação de Desempenho
-            </div>
-
-            {/* Big Timer */}
-            <div className="font-mono text-5xl sm:text-6xl font-black tracking-tight text-white my-1">
-              {formattedTime}
-              <span className="text-2xl text-blue-400 font-sans ml-1">s</span>
-            </div>
-
-            {/* Goal badge */}
-            <div className="mt-2 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-950 text-blue-300 border border-blue-800">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              Meta: 15 certificados em &lt; 60 segundos
-            </div>
-
-            {/* Live Progress Bar */}
-            <div className="w-full mt-5">
-              <div className="flex justify-between text-xs text-slate-400 font-medium mb-1.5">
-                <span>{currentStatusText}</span>
-                <span className="font-mono text-blue-400 font-bold">{progress}%</span>
+          {participants.length === 0 ? (
+            <div className="text-center py-6 flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                <AlertTriangle className="w-6 h-6" />
               </div>
-              <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full transition-all duration-150"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Benchmark Results Card on Complete */}
-          {benchmark && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>Validação Aprovada com Excelência!</span>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
-                  <span className="text-[11px] text-slate-500 block">Tempo Total</span>
-                  <span className="text-base font-bold text-emerald-700 font-mono">
-                    {benchmark.timeSeconds}s
-                  </span>
-                </div>
-                <div className="bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
-                  <span className="text-[11px] text-slate-500 block">Média / Cert</span>
-                  <span className="text-base font-bold text-slate-800 font-mono">
-                    {benchmark.averagePerCertMs}ms
-                  </span>
-                </div>
-                <div className="bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
-                  <span className="text-[11px] text-slate-500 block">Velocidade</span>
-                  <span className="text-base font-bold text-emerald-600 font-mono">
-                    {benchmark.certsPerSecond} cert/s
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs text-emerald-700 text-center font-medium">
-                ⚡ O sistema gerou {benchmark.totalCount} certificados {Math.round(60 / benchmark.timeSeconds)}x mais rápido do que a meta estipulada!
+              <h4 className="text-sm font-bold text-slate-800">
+                Nenhum participante na lista de emissão
+              </h4>
+              <p className="text-xs text-slate-500 max-w-sm">
+                Importe uma planilha CSV na aba "Alunos & Planilha CSV" para processar a geração de certificados em lote.
               </p>
+              <button
+                onClick={onClose}
+                className="mt-2 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs px-4 py-2 rounded-xl transition"
+              >
+                Voltar e Importar Alunos
+              </button>
             </div>
+          ) : (
+            <>
+              {/* Real-time Chronometer / Benchmark Display */}
+              <div className="bg-slate-900 text-white p-6 rounded-xl border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden">
+                {/* Subtle glowing background */}
+                <div className="absolute inset-0 bg-radial from-blue-900/30 to-transparent pointer-events-none"></div>
+
+                <div className="flex items-center gap-2 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                  <Timer className="w-4 h-4 animate-pulse" />
+                  Cronômetro de Validação de Desempenho
+                </div>
+
+                {/* Big Timer */}
+                <div className="font-mono text-5xl sm:text-6xl font-black tracking-tight text-white my-1">
+                  {formattedTime}
+                  <span className="text-2xl text-blue-400 font-sans ml-1">s</span>
+                </div>
+
+                {/* Goal badge */}
+                <div className="mt-2 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-950 text-blue-300 border border-blue-800">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                  Meta: Emissão em &lt; 60 segundos
+                </div>
+
+                {/* Live Progress Bar */}
+                <div className="w-full mt-5">
+                  <div className="flex justify-between text-xs text-slate-400 font-medium mb-1.5">
+                    <span>{currentStatusText}</span>
+                    <span className="font-mono text-blue-400 font-bold">{progress}%</span>
+                  </div>
+                  <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full transition-all duration-150"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Benchmark Results Card on Complete */}
+              {benchmark && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <span>Validação Aprovada com Excelência!</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+                      <span className="text-[11px] text-slate-500 block">Tempo Total</span>
+                      <span className="text-base font-bold text-emerald-700 font-mono">
+                        {benchmark.timeSeconds}s
+                      </span>
+                    </div>
+                    <div className="bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+                      <span className="text-[11px] text-slate-500 block">Média / Cert</span>
+                      <span className="text-base font-bold text-slate-800 font-mono">
+                        {benchmark.averagePerCertMs}ms
+                      </span>
+                    </div>
+                    <div className="bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+                      <span className="text-[11px] text-slate-500 block">Velocidade</span>
+                      <span className="text-base font-bold text-emerald-600 font-mono">
+                        {benchmark.certsPerSecond} cert/s
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-emerald-700 text-center font-medium">
+                    ⚡ O sistema gerou {benchmark.totalCount} certificados em alta velocidade!
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  id="btn-run-batch-zip"
+                  onClick={() => runBatchGeneration('zip')}
+                  disabled={isRunning}
+                  className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-200/50 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <FileArchive className="w-4 h-4" />
+                  {isRunning && mode === 'zip' ? 'Gerando ZIP...' : `Baixar em ZIP (${participants.length} PDFs)`}
+                </button>
+
+                <button
+                  id="btn-run-batch-merged"
+                  onClick={() => runBatchGeneration('merged')}
+                  disabled={isRunning}
+                  className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <FileText className="w-4 h-4" />
+                  {isRunning && mode === 'merged' ? 'Gerando PDF...' : `PDF Único (${participants.length} Alunos)`}
+                </button>
+              </div>
+            </>
           )}
-
-          {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              id="btn-run-batch-zip"
-              onClick={() => runBatchGeneration('zip')}
-              disabled={isRunning}
-              className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-200/50 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              <FileArchive className="w-4 h-4" />
-              {isRunning && mode === 'zip' ? 'Gerando ZIP...' : `Baixar em ZIP (${participants.length} PDFs)`}
-            </button>
-
-            <button
-              id="btn-run-batch-merged"
-              onClick={() => runBatchGeneration('merged')}
-              disabled={isRunning}
-              className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              <FileText className="w-4 h-4" />
-              {isRunning && mode === 'merged' ? 'Gerando PDF...' : `PDF Único (${participants.length} Alunos)`}
-            </button>
-          </div>
         </div>
 
         {/* Modal Footer */}

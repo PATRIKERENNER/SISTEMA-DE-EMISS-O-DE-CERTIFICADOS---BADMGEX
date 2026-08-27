@@ -44,10 +44,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div>
               <h4 className="font-bold text-slate-900 text-sm">
-                Carregar os Alunos (Via Planilha ou 1-Clique)
+                Carregar os Alunos (Via Planilha CSV ou Cadastro Manual)
               </h4>
               <p className="text-xs text-slate-600 mt-1">
-                Você pode clicar no botão azul <strong className="text-blue-700">"Carregar 15 Alunos Modelo"</strong> para testar instantaneamente, ou arrastar sua planilha Excel/CSV contendo as colunas: <em>Nome, CPF, Registro, Categoria</em>.
+                Basta arrastar sua planilha Excel/CSV contendo as colunas <em>Nome, CPF, Registro, Categoria</em> para a área de importação, ou baixar o modelo pronto clicando em <strong className="text-blue-700">"Baixar Modelo CSV"</strong>.
               </p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 Emissão em Massa Instantânea com Cronômetro
               </h4>
               <p className="text-xs text-slate-600 mt-1">
-                Clique no botão superior <strong className="text-blue-700">"Emitir 15 Certificados"</strong>. O cronômetro validará a geração em tempo real (15 certificados gerados em aproximadamente 1 a 2.5 segundos, muito abaixo do limite de 1 minuto exigido!).
+                Clique no botão <strong className="text-blue-700">"Gerar Certificados"</strong>. O sistema processa todos os alunos em lote instantaneamente (certificados gerados em aproximadamente 1 a 2.5 segundos, muito abaixo do limite de 1 minuto).
               </p>
             </div>
           </div>
