@@ -8,6 +8,7 @@ import { ParticipantsTable } from './components/ParticipantsTable';
 import { CourseConfigForm } from './components/CourseConfigForm';
 import { BatchGeneratorModal } from './components/BatchGeneratorModal';
 import { HelpModal } from './components/HelpModal';
+import { PrintChoiceBanner } from './components/PrintChoiceBanner';
 import { 
   Eye, 
   Users, 
@@ -205,6 +206,7 @@ export default function App() {
                 allParticipants={participants}
                 currentIndex={selectedParticipantIndex}
                 onSelectParticipant={(idx) => setSelectedParticipantIndex(idx)}
+                onOpenBatchModal={() => setIsBatchModalOpen(true)}
               />
             )}
           </div>
@@ -224,7 +226,7 @@ export default function App() {
                     1. Importação de Dados
                   </h2>
                   <h3 className="text-sm font-bold text-slate-800">
-                    Mala Direta via Planilha CSV
+                    Mala Direta via Planilha (Excel .xlsx / CSV)
                   </h3>
                 </div>
               </div>
@@ -232,8 +234,19 @@ export default function App() {
               <CsvUploader
                 onLoadParticipants={handleLoadCsvParticipants}
                 currentCount={participants.length}
+                onChooseSingle={() => setActiveTab('preview')}
+                onChooseBatch={() => setIsBatchModalOpen(true)}
               />
             </div>
+
+            {/* Prominent Print Choice Action Banner - Appears immediately when data exists */}
+            {participants.length > 0 && (
+              <PrintChoiceBanner
+                participants={participants}
+                onChooseSingle={() => setActiveTab('preview')}
+                onChooseBatch={() => setIsBatchModalOpen(true)}
+              />
+            )}
 
             {/* Participants Table */}
             <ParticipantsTable
@@ -248,6 +261,7 @@ export default function App() {
               onAddParticipant={handleAddParticipant}
               onDeleteParticipant={handleDeleteParticipant}
               onClearAll={handleClearAll}
+              onOpenBatchModal={() => setIsBatchModalOpen(true)}
             />
           </div>
         )}

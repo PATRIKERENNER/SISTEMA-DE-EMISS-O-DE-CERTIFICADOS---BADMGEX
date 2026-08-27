@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Participant, CourseConfig } from '../types';
 import { SGExLogo, BAdmQgexLogo, DirectorSignature, BaroqueCorner, CertificateFlourish } from './OfficialLogos';
-import { Download, Printer, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CheckCircle, Sparkles } from 'lucide-react';
+import { Download, Printer, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CheckCircle, Sparkles, Zap } from 'lucide-react';
 import { downloadSingleCertificate } from '../services/pdfGenerator';
 
 interface CertificatePreviewProps {
@@ -10,6 +10,7 @@ interface CertificatePreviewProps {
   allParticipants: Participant[];
   currentIndex: number;
   onSelectParticipant: (index: number) => void;
+  onOpenBatchModal?: () => void;
 }
 
 export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
@@ -18,6 +19,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   allParticipants,
   currentIndex,
   onSelectParticipant,
+  onOpenBatchModal,
 }) => {
   const [viewSide, setViewSide] = useState<'front' | 'back'>('front');
   const [showVariableHighlights, setShowVariableHighlights] = useState<boolean>(false);
@@ -158,7 +160,8 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             id="btn-download-individual-pdf"
             onClick={handleDownload}
             disabled={isDownloading}
-            className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition active:scale-95 disabled:opacity-50"
+            title="Baixar PDF deste aluno"
           >
             <Download className="w-3.5 h-3.5" />
             {isDownloading ? 'Gerando...' : 'Baixar PDF'}
@@ -167,11 +170,24 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
           <button
             id="btn-print-preview"
             onClick={handlePrint}
-            className="hidden md:flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition active:scale-95"
+            className="hidden sm:flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition active:scale-95"
+            title="Imprimir certificado deste aluno"
           >
             <Printer className="w-3.5 h-3.5" />
-            Imprimir
+            Imprimir Este
           </button>
+
+          {allParticipants.length > 1 && onOpenBatchModal && (
+            <button
+              id="btn-preview-batch-print"
+              onClick={onOpenBatchModal}
+              className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition active:scale-95"
+              title="Imprimir todos os certificados da turma de uma só vez"
+            >
+              <Zap className="w-3.5 h-3.5 fill-white" />
+              <span>Imprimir Todos ({allParticipants.length})</span>
+            </button>
+          )}
         </div>
       </div>
 

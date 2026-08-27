@@ -10,11 +10,15 @@ import { FileSpreadsheet, Download, CheckCircle, AlertCircle, FileCheck, FileCod
 interface CsvUploaderProps {
   onLoadParticipants: (participants: Participant[]) => void;
   currentCount: number;
+  onChooseSingle?: () => void;
+  onChooseBatch?: () => void;
 }
 
 export const CsvUploader: React.FC<CsvUploaderProps> = ({
   onLoadParticipants,
   currentCount,
+  onChooseSingle,
+  onChooseBatch,
 }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -161,7 +165,39 @@ export const CsvUploader: React.FC<CsvUploaderProps> = ({
       {successMessage && (
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium p-3 rounded-xl animate-fade-in">
           <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{successMessage}</span>
+          <span className="font-semibold">{successMessage}</span>
+        </div>
+      )}
+
+      {/* Quick Action Bar when data is loaded */}
+      {currentCount > 0 && onChooseBatch && onChooseSingle && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-800">
+              Pronto para emissão!
+            </span>
+            <span className="text-xs text-slate-600">
+              Escolha a opção de impressão:
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              id="btn-quick-single-preview"
+              onClick={onChooseSingle}
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-100 active:scale-98 text-slate-800 border border-slate-300 text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-2xs transition"
+            >
+              <span>📄 Imprimir 1 por Vez (Prévia)</span>
+            </button>
+
+            <button
+              id="btn-quick-batch-print"
+              onClick={onChooseBatch}
+              className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-sm shadow-blue-200 transition"
+            >
+              <span>🖨️ Imprimir TODOS de Uma Vez ({currentCount})</span>
+            </button>
+          </div>
         </div>
       )}
 

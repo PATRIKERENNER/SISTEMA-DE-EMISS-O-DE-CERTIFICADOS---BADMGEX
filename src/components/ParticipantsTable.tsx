@@ -13,6 +13,7 @@ interface ParticipantsTableProps {
   onAddParticipant: (participant: Participant) => void;
   onDeleteParticipant: (index: number) => void;
   onClearAll: () => void;
+  onOpenBatchModal?: () => void;
 }
 
 export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
@@ -24,6 +25,7 @@ export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
   onAddParticipant,
   onDeleteParticipant,
   onClearAll,
+  onOpenBatchModal,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -126,6 +128,18 @@ export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Exportar Excel</span>
+            </button>
+          )}
+
+          {/* Quick Batch Print Button */}
+          {participants.length > 0 && onOpenBatchModal && (
+            <button
+              id="btn-table-batch-print"
+              onClick={onOpenBatchModal}
+              className="flex items-center gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs transition"
+              title="Imprimir todos os certificados de uma vez"
+            >
+              <span>🖨️ Imprimir Todos</span>
             </button>
           )}
 
