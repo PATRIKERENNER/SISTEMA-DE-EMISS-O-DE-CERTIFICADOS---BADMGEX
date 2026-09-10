@@ -69,13 +69,18 @@ export function mapRowsToParticipants(rows: Record<string, any>[]): Participant[
       normalizedRow['categoriadacnh'] ||
       'AD';
 
+    // Fallback: Fixed turma number for all participants (does not increment per student)
     const numero =
+      normalizedRow['turma'] ||
+      normalizedRow['numeroturma'] ||
+      normalizedRow['noturma'] ||
+      normalizedRow['turmanumero'] ||
       normalizedRow['numero'] ||
       normalizedRow['cert'] ||
       normalizedRow['numerocertificado'] ||
       normalizedRow['numcert'] ||
       normalizedRow['ncertificado'] ||
-      `${String(index + 1).padStart(3, '0')}/CVTE/2026`;
+      '001/CVTE/2026';
 
     const periodo =
       normalizedRow['periodo'] ||
@@ -209,10 +214,24 @@ export async function parseSpreadsheetFile(file: File): Promise<Participant[]> {
 export function downloadExcelTemplate(): void {
   const templateRows = [
     {
-      Numero: '001/CVTE/2026',
-      Nome: 'NOME COMPLETO DO ALUNO',
+      NumeroTurma: '001/CVTE/2026',
+      Nome: 'NOME COMPLETO DO ALUNO 1',
       CPF: '000.000.000-00',
       Registro: '00000000000',
+      Categoria: 'AD',
+      Periodo: '08 a 16 de junho de 2026',
+      CargaHoraria: '50h/a',
+      DataEmissao: 'Brasília-DF, 18 de junho de 2026',
+      NotaLegislacao: '10',
+      NotaDirecao: '10',
+      NotaSocorros: '10',
+      NotaConvivio: '10',
+    },
+    {
+      NumeroTurma: '001/CVTE/2026',
+      Nome: 'NOME COMPLETO DO ALUNO 2',
+      CPF: '111.111.111-11',
+      Registro: '11111111111',
       Categoria: 'AD',
       Periodo: '08 a 16 de junho de 2026',
       CargaHoraria: '50h/a',
@@ -228,7 +247,7 @@ export function downloadExcelTemplate(): void {
 
   // Set column widths for comfortable Excel viewing
   worksheet['!cols'] = [
-    { wch: 18 }, // Numero
+    { wch: 18 }, // NumeroTurma
     { wch: 38 }, // Nome
     { wch: 18 }, // CPF
     { wch: 16 }, // Registro
@@ -265,7 +284,7 @@ export function downloadCsvTemplate(): void {
  */
 export function exportParticipantsToExcel(participants: Participant[], courseTitle = 'Curso'): void {
   const exportRows = participants.map((p) => ({
-    Numero: p.numeroCertificado,
+    NumeroTurma: p.numeroCertificado || '001/CVTE/2026',
     Nome: p.nome,
     CPF: p.cpf,
     Registro: p.registro,

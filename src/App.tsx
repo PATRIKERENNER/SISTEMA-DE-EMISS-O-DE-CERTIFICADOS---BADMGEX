@@ -56,6 +56,7 @@ export default function App() {
       nomeCurso: preset.nomeCompleto,
       subtituloCurso: preset.subtitulo,
       siglaCurso: preset.sigla,
+      numeroTurma: `001/${preset.sigla}/${prev.ano || '2026'}`,
       resolucaoContran: preset.resolucaoPadrao,
       validadeAnos: 'cinco anos',
       cargaHorariaGeral: preset.cargaHorariaPadrao,

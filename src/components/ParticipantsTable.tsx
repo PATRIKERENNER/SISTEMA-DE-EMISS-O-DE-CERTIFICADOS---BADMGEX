@@ -67,12 +67,11 @@ export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
     e.preventDefault();
     if (!newParticipant.nome) return;
 
-    const nextIndex = participants.length + 1;
-    const certNum = `${String(nextIndex).padStart(3, '0')}/${config.siglaCurso}/${config.ano}`;
+    const certNum = config.numeroTurma || `001/${config.siglaCurso}/${config.ano}`;
 
     const created: Participant = {
       id: `manual-${Date.now()}`,
-      numeroCertificado: newParticipant.numeroCertificado || certNum,
+      numeroCertificado: config.numeroTurma || newParticipant.numeroCertificado || certNum,
       nome: (newParticipant.nome || '').toUpperCase(),
       cpf: newParticipant.cpf || '000.000.000-00',
       registro: newParticipant.registro || '00000000000',
@@ -242,7 +241,7 @@ export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
           <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
             <tr>
               <th className="py-2.5 px-3 font-bold text-slate-600 w-12 text-center">#</th>
-              <th className="py-2.5 px-3 font-bold text-slate-600">Certificado</th>
+              <th className="py-2.5 px-3 font-bold text-slate-600" title="Número da Turma (comum a todos os alunos)">Nº da Turma</th>
               <th className="py-2.5 px-3 font-bold text-slate-600">Nome do Aluno</th>
               <th className="py-2.5 px-3 font-bold text-slate-600">CPF</th>
               <th className="py-2.5 px-3 font-bold text-slate-600">Nº Registro</th>
@@ -347,7 +346,7 @@ export const ParticipantsTable: React.FC<ParticipantsTableProps> = ({
                       {p.originalIndex + 1}
                     </td>
                     <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
-                      {p.numeroCertificado}
+                      {config.numeroTurma || p.numeroCertificado || '001/CVTE/2026'}
                     </td>
                     <td className="py-2.5 px-3 font-bold text-slate-900 truncate max-w-[200px]">
                       {p.nome}

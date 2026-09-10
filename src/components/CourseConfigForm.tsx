@@ -49,6 +49,7 @@ export const CourseConfigForm: React.FC<CourseConfigFormProps> = ({
       nomeCurso: preset.nomeCompleto,
       subtituloCurso: preset.subtitulo,
       siglaCurso: preset.sigla,
+      numeroTurma: `001/${preset.sigla}/${config.ano || '2026'}`,
       cargaHorariaGeral: preset.cargaHorariaPadrao,
       resolucaoContran: preset.resolucaoPadrao,
       disciplinas: preset.disciplinas,
@@ -328,7 +329,7 @@ export const CourseConfigForm: React.FC<CourseConfigFormProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">
                   Sigla do Curso
@@ -349,6 +350,18 @@ export const CourseConfigForm: React.FC<CourseConfigFormProps> = ({
                   value={config.ano}
                   onChange={(e) => handleChange('ano', e.target.value)}
                   className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono"
+                />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1" title="Número da Turma impresso no canto superior direito do certificado">
+                  Nº da Turma (Canto Sup. Direito)
+                </label>
+                <input
+                  type="text"
+                  value={config.numeroTurma || `001/${config.siglaCurso}/${config.ano}`}
+                  onChange={(e) => handleChange('numeroTurma', e.target.value)}
+                  placeholder={`001/${config.siglaCurso}/${config.ano}`}
+                  className="w-full p-2 bg-blue-50/70 border border-blue-300 rounded-lg text-blue-950 font-mono font-bold"
                 />
               </div>
             </div>

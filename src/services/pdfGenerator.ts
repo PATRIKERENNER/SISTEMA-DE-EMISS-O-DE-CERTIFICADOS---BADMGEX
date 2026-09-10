@@ -170,12 +170,12 @@ export function renderCertificateFront(
   doc.circle(pageWidth / 2 - 8, 49, 1.5, 'F');
   doc.circle(pageWidth / 2 + 8, 49, 1.5, 'F');
 
-  // 6. Certificate Registration Number (Right under B ADM logo)
-  const numCert = participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
+  // 6. Certificate Registration Number (Right under B ADM logo) - Número da Turma (idêntico para todos os alunos)
+  const numTurma = config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(15, 23, 42);
-  doc.text(numCert, pageWidth - 46 + 11, 56, { align: 'center' });
+  doc.text(numTurma, pageWidth - 46 + 11, 56, { align: 'center' });
 
   // 7. Main Certificate Text (Rich formatted paragraph with dynamic participant details)
   const periodo = participant.periodo || config.periodoGeral;
@@ -404,8 +404,8 @@ export function renderCertificateBack(
   doc.setTextColor(30, 41, 59);
   doc.text('CONTEÚDO PROGRAMÁTICO', pageWidth / 2, 48, { align: 'center' });
 
-  const numCert = participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
-  doc.text(numCert, pageWidth - 26, 48, { align: 'right' });
+  const numTurma = config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
+  doc.text(numTurma, pageWidth - 26, 48, { align: 'right' });
 
   // 5. Programmatic Content Table
   const tableX = 22;

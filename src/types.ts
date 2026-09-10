@@ -65,6 +65,7 @@ export interface CourseConfig {
   nomeCurso: string; // ex: Curso Especializado para Condutores de Veículos de Transporte de Emergência
   subtituloCurso: string; // ex: Condutores de Veículos de Transporte de Emergência
   siglaCurso: string; // ex: CVTE
+  numeroTurma?: string; // ex: 001/CVTE/2026 - Número da turma idêntico para todos os alunos no canto superior direito
   ano: string; // ex: 2026
   instituicao: string; // ex: Instituição de Ensino de Trânsito da Base Administrativa do Quartel-General do Exército – Forte Caxias
   instrucaoDetran: string; // ex: Instrução Nº 592, de 10 de agosto de 2020/Detran-DF

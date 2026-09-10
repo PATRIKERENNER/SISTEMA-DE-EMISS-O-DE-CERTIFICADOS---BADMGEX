@@ -293,16 +293,16 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   </div>
                 </div>
 
-                {/* B ADM QGEX Crest & Certificate ID */}
+                {/* B ADM QGEX Crest & Turma / Certificate ID */}
                 <div className="flex flex-col items-center">
                   <BAdmQgexLogo className="w-20 h-24 drop-shadow-xs" />
                   <div className="mt-1 text-center font-bold text-sm text-slate-900 tracking-wider">
                     {showVariableHighlights ? (
-                      <span className="text-red-700 border-b-2 border-red-600 font-extrabold px-1">
-                        {participant.numeroCertificado}
+                      <span className="text-red-700 border-b-2 border-red-600 font-extrabold px-1" title="Número da Turma (idêntico para todos os alunos)">
+                        {config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}
                       </span>
                     ) : (
-                      <span>{participant.numeroCertificado}</span>
+                      <span>{config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}</span>
                     )}
                   </div>
                 </div>
@@ -590,7 +590,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 <div className="flex flex-col items-center">
                   <BAdmQgexLogo className="w-16 h-20" />
                   <span className="text-xs font-bold text-slate-900 mt-1">
-                    {participant.numeroCertificado}
+                    {config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}
                   </span>
                 </div>
               </div>

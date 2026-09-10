@@ -5,6 +5,7 @@ export const DEFAULT_COURSE_CONFIG: CourseConfig = {
   nomeCurso: 'CURSO ESPECIALIZADO PARA CONDUTORES DE VEÍCULOS DE TRANSPORTE DE EMERGÊNCIA',
   subtituloCurso: 'Condutores de Veículos de Transporte de Emergência (CVTE)',
   siglaCurso: 'CVTE',
+  numeroTurma: '001/CVTE/2026',
   ano: '2026',
   instituicao: 'A Instituição de Ensino de Trânsito da Base Administrativa do Quartel-General do Exército – Forte Caxias –',
   instrucaoDetran: 'Instrução Nº 592, de 10 de agosto de 2020/Detran-DF',
@@ -74,8 +75,9 @@ export const DEFAULT_COURSE_CONFIG: CourseConfig = {
 
 export const INITIAL_PARTICIPANTS: Participant[] = [];
 
-export const CSV_TEMPLATE_HEADER = 'Numero,Nome,CPF,Registro,Categoria,Periodo,CargaHoraria,DataEmissao,NotaLegislacao,NotaDirecao,NotaSocorros,NotaConvivio';
+export const CSV_TEMPLATE_HEADER = 'NumeroTurma,Nome,CPF,Registro,Categoria,Periodo,CargaHoraria,DataEmissao,NotaLegislacao,NotaDirecao,NotaSocorros,NotaConvivio';
 
-export const CSV_SAMPLE_TEXT = `Numero,Nome,CPF,Registro,Categoria,Periodo,CargaHoraria,DataEmissao,NotaLegislacao,NotaDirecao,NotaSocorros,NotaConvivio
-001/CVTE/2026,NOME COMPLETO DO ALUNO,000.000.000-00,00000000000,AD,08 a 16 de junho de 2026,50h/a,Brasília-DF, 18 de junho de 2026,10,10,10,10`;
+export const CSV_SAMPLE_TEXT = `NumeroTurma,Nome,CPF,Registro,Categoria,Periodo,CargaHoraria,DataEmissao,NotaLegislacao,NotaDirecao,NotaSocorros,NotaConvivio
+001/CVTE/2026,NOME COMPLETO DO ALUNO 1,000.000.000-00,00000000000,AD,08 a 16 de junho de 2026,50h/a,Brasília-DF, 18 de junho de 2026,10,10,10,10
+001/CVTE/2026,NOME COMPLETO DO ALUNO 2,111.111.111-11,11111111111,AD,08 a 16 de junho de 2026,50h/a,Brasília-DF, 18 de junho de 2026,10,10,10,10`;
 
