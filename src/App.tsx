@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Participant, CourseConfig } from './types';
+import { Participant, CourseConfig, CoursePreset, CourseTypeId } from './types';
 import { DEFAULT_COURSE_CONFIG, INITIAL_PARTICIPANTS } from './data/sampleData';
+import { OFFICIAL_COURSE_PRESETS } from './data/coursesPresets';
 import { Header } from './components/Header';
 import { CertificatePreview } from './components/CertificatePreview';
 import { CsvUploader } from './components/CsvUploader';
 import { ParticipantsTable } from './components/ParticipantsTable';
 import { CourseConfigForm } from './components/CourseConfigForm';
+import { CourseSelector } from './components/CourseSelector';
+import { VerificationPortal } from './components/VerificationPortal';
 import { BatchGeneratorModal } from './components/BatchGeneratorModal';
 import { HelpModal } from './components/HelpModal';
 import { PrintChoiceBanner } from './components/PrintChoiceBanner';
@@ -20,16 +23,44 @@ import {
   Shield, 
   Award,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function App() {
   const [participants, setParticipants] = useState<Participant[]>(INITIAL_PARTICIPANTS);
   const [courseConfig, setCourseConfig] = useState<CourseConfig>(DEFAULT_COURSE_CONFIG);
   const [selectedParticipantIndex, setSelectedParticipantIndex] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<'preview' | 'participants' | 'config'>('preview');
+  const [activeCourseId, setActiveCourseId] = useState<CourseTypeId>('transporte_coletivo');
+  const [activeTab, setActiveTab] = useState<'preview' | 'participants' | 'config' | 'verification'>('preview');
+  const [verificationCodeQuery, setVerificationCodeQuery] = useState<string>('');
   const [isBatchModalOpen, setIsBatchModalOpen] = useState<boolean>(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+
+  // Participant counts per course preset
+  const participantCountByCourse: Record<string, number> = {};
+  OFFICIAL_COURSE_PRESETS.forEach(preset => {
+    participantCountByCourse[preset.id] = participants.filter(p => 
+      p.tipoCursoId === preset.id || (p.numeroCertificado && p.numeroCertificado.toUpperCase().includes(preset.sigla.toUpperCase()))
+    ).length;
+  });
+
+  const handleSelectCoursePreset = (preset: CoursePreset) => {
+    setActiveCourseId(preset.id);
+    setCourseConfig(prev => ({
+      ...prev,
+      nomeCurso: preset.nomeCompleto,
+      subtituloCurso: preset.subtitulo,
+      siglaCurso: preset.sigla,
+      resolucaoContran: preset.resolucaoPadrao,
+      validadeAnos: 'cinco anos',
+      cargaHorariaGeral: preset.cargaHorariaPadrao,
+      disciplinas: preset.disciplinas.map(d => ({
+        ...d,
+        id: d.id || `disc-${Math.random().toString(36).substring(2, 9)}`,
+      })),
+    }));
+  };
 
   // Safe current participant
   const currentParticipant = participants[selectedParticipantIndex] || participants[0] || {
@@ -48,7 +79,11 @@ export default function App() {
   };
 
   const handleAddParticipant = (newP: Participant) => {
-    setParticipants([...participants, newP]);
+    const pWithCourse: Participant = {
+      ...newP,
+      tipoCursoId: newP.tipoCursoId || activeCourseId,
+    };
+    setParticipants([...participants, pWithCourse]);
     setSelectedParticipantIndex(participants.length);
   };
 
@@ -66,7 +101,11 @@ export default function App() {
   };
 
   const handleLoadCsvParticipants = (imported: Participant[]) => {
-    setParticipants(imported);
+    const tagged = imported.map(p => ({
+      ...p,
+      tipoCursoId: p.tipoCursoId || activeCourseId,
+    }));
+    setParticipants(tagged);
     setSelectedParticipantIndex(0);
     setActiveTab('preview');
   };
@@ -78,6 +117,7 @@ export default function App() {
         totalParticipants={participants.length}
         onOpenBatchModal={() => setIsBatchModalOpen(true)}
         onOpenHelp={() => setIsHelpModalOpen(true)}
+        onOpenVerification={() => setActiveTab('verification')}
       />
 
       {/* Main Container */}
@@ -131,7 +171,7 @@ export default function App() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs max-w-fit">
+        <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs max-w-fit flex-wrap">
           <button
             id="tab-preview"
             onClick={() => setActiveTab('preview')}
@@ -155,7 +195,7 @@ export default function App() {
             }`}
           >
             <Users className="w-4 h-4" />
-            Alunos & Planilha (Excel / CSV)
+            Cursos & Planilhas (Excel / CSV)
             <span className={`text-[11px] px-2 py-0.2 rounded-full font-bold ${
               activeTab === 'participants' ? 'bg-white text-blue-700' : 'bg-slate-100 text-slate-600'
             }`}>
@@ -175,6 +215,19 @@ export default function App() {
             <Settings className="w-4 h-4" />
             Configurações do Curso
           </button>
+
+          <button
+            id="tab-verification"
+            onClick={() => setActiveTab('verification')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition ${
+              activeTab === 'verification'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            Autenticidade Digital
+          </button>
         </div>
 
         {/* Tab 1: Preview View */}
@@ -189,7 +242,7 @@ export default function App() {
                   Nenhum aluno carregado no momento
                 </h3>
                 <p className="text-xs text-slate-500 max-w-md">
-                  Importe sua planilha Excel (.xlsx) ou CSV na aba "Alunos & Planilha" para visualizar a prévia e emitir os certificados oficiais.
+                  Importe sua planilha Excel (.xlsx) ou CSV na aba "Cursos & Planilhas" para visualizar a prévia e emitir os certificados oficiais.
                 </p>
                 <button
                   onClick={() => setActiveTab('participants')}
@@ -207,6 +260,10 @@ export default function App() {
                 currentIndex={selectedParticipantIndex}
                 onSelectParticipant={(idx) => setSelectedParticipantIndex(idx)}
                 onOpenBatchModal={() => setIsBatchModalOpen(true)}
+                onOpenVerification={(code) => {
+                  setVerificationCodeQuery(code);
+                  setActiveTab('verification');
+                }}
               />
             )}
           </div>
@@ -215,7 +272,14 @@ export default function App() {
         {/* Tab 2: Participants & CSV View */}
         {activeTab === 'participants' && (
           <div className="flex flex-col gap-6 animate-fade-in">
-            {/* CSV Uploader Box */}
+            {/* Course Specialized Presets Selector */}
+            <CourseSelector
+              activeCourseId={activeCourseId}
+              onSelectCourse={handleSelectCoursePreset}
+              participantCountByCourse={participantCountByCourse}
+            />
+
+            {/* CSV / Excel Uploader Box */}
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
@@ -223,10 +287,10 @@ export default function App() {
                 </div>
                 <div>
                   <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    1. Importação de Dados
+                    1. Importação de Dados por Turma / Curso
                   </h2>
                   <h3 className="text-sm font-bold text-slate-800">
-                    Mala Direta via Planilha (Excel .xlsx / CSV)
+                    Mala Direta via Planilha (Excel .xlsx / CSV) - {courseConfig.nomeCurso}
                   </h3>
                 </div>
               </div>
@@ -272,6 +336,24 @@ export default function App() {
             <CourseConfigForm
               config={courseConfig}
               onChangeConfig={(newCfg) => setCourseConfig(newCfg)}
+            />
+          </div>
+        )}
+
+        {/* Tab 4: Authenticity & Verification Portal */}
+        {activeTab === 'verification' && (
+          <div className="flex flex-col gap-6 animate-fade-in">
+            <VerificationPortal
+              initialCode={verificationCodeQuery}
+              onSelectParticipantForPreview={(code) => {
+                const foundIdx = participants.findIndex(
+                  p => p.codigoVerificacao === code || p.numeroCertificado === code || p.cpf === code
+                );
+                if (foundIdx >= 0) {
+                  setSelectedParticipantIndex(foundIdx);
+                }
+                setActiveTab('preview');
+              }}
             />
           </div>
         )}

@@ -6,12 +6,14 @@ interface HeaderProps {
   totalParticipants: number;
   onOpenBatchModal: () => void;
   onOpenHelp: () => void;
+  onOpenVerification?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   totalParticipants,
   onOpenBatchModal,
   onOpenHelp,
+  onOpenVerification,
 }) => {
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-40 shadow-xs">
@@ -38,7 +40,19 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right: Navigation & Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {onOpenVerification && (
+          <button
+            id="btn-header-verification"
+            onClick={onOpenVerification}
+            className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-xl transition border border-emerald-200"
+            title="Portal de Validação e Autenticidade de Certificados"
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span className="hidden md:inline">Validar Autenticidade</span>
+          </button>
+        )}
+
         <button
           id="btn-help-guide"
           onClick={onOpenHelp}

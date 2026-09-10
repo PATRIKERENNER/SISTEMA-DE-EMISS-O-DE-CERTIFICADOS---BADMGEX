@@ -3,6 +3,12 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Participant, CourseConfig, GenerationBenchmark } from '../types';
 import { SGEX_BASE64_PNG, BADM_BASE64_PNG } from '../data/officialLogosBase64';
+import {
+  generateVerificationCode,
+  generateQrCodeDataUrl,
+  getVerificationUrl,
+  registerCertificatesInStore,
+} from './verificationService';
 
 /**
  * Loads an image from URL/path and returns base64 data URL
@@ -106,12 +112,29 @@ function drawCertificateBorder(doc: jsPDF) {
 }
 
 /**
+ * Helper to ensure electronic signature QR codes are prepared
+ */
+async function prepareSignatures(config: CourseConfig): Promise<void> {
+  if (!config.assinaturas) return;
+  for (const sig of config.assinaturas) {
+    if (sig.tipoAssinatura === 'qrcode' && sig.dadosQrCode && !sig.qrCodeDataUrl) {
+      try {
+        sig.qrCodeDataUrl = await generateQrCodeDataUrl(sig.dadosQrCode, 120);
+      } catch (e) {
+        console.warn('Erro ao gerar QR Code da assinatura:', e);
+      }
+    }
+  }
+}
+
+/**
  * Draws Front Page (Frente do Certificado)
  */
 export function renderCertificateFront(
   doc: jsPDF,
   participant: Participant,
-  config: CourseConfig
+  config: CourseConfig,
+  verificationQrDataUrl?: string
 ): void {
   const pageWidth = 297;
 
@@ -190,6 +213,7 @@ export function renderCertificateFront(
           nome: config.nomeDiretor || '',
           cargo: config.cargoDiretor || '',
           cpf: config.cpfDiretor || '',
+          tipoAssinatura: 'manual' as const,
         },
       ]
     : [];
@@ -197,9 +221,24 @@ export function renderCertificateFront(
   if (activeSignatures.length <= 1) {
     // Single signature (Left side) + Footer (Right side)
     const sig = activeSignatures[0];
-    if (config.incluirAssinaturaImagem && cachedSignaturePng) {
-      doc.addImage(cachedSignaturePng, 'PNG', 32, 160, 48, 16);
+    if (sig) {
+      if (sig.tipoAssinatura === 'imagem' && sig.imagemUrl) {
+        try {
+          doc.addImage(sig.imagemUrl, 'PNG', 36, 160, 40, 16);
+        } catch (e) {
+          console.warn('Erro ao inserir imagem de assinatura:', e);
+        }
+      } else if (sig.tipoAssinatura === 'qrcode' && sig.qrCodeDataUrl) {
+        try {
+          doc.addImage(sig.qrCodeDataUrl, 'PNG', 49, 161, 14, 14);
+        } catch (e) {
+          console.warn('Erro ao inserir QR Code de assinatura:', e);
+        }
+      } else if (config.incluirAssinaturaImagem && cachedSignaturePng) {
+        doc.addImage(cachedSignaturePng, 'PNG', 32, 160, 48, 16);
+      }
     }
+
     doc.setDrawColor(100, 116, 139);
     doc.setLineWidth(0.3);
     doc.line(26, 178, 86, 178);
@@ -225,6 +264,25 @@ export function renderCertificateFront(
       doc.text(sig.cpf, 56, 191, { align: 'center' });
     }
 
+    // Authenticity Digital Verification in the center/right
+    if (config.incluirCodigoVerificacao !== false) {
+      const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
+      if (verificationQrDataUrl) {
+        try {
+          doc.addImage(verificationQrDataUrl, 'PNG', 142, 166, 16, 16);
+        } catch (e) {
+          console.warn('Erro ao inserir QR de autenticidade:', e);
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6);
+        doc.setTextColor(30, 41, 59);
+        doc.text('AUTENTICIDADE DIGITAL', 150, 185, { align: 'center' });
+        doc.setFont('courier', 'bold');
+        doc.setFontSize(5.5);
+        doc.text(verifCode, 150, 188, { align: 'center' });
+      }
+    }
+
     // Military Base Unit / CNPJ Footer (Right Bottom)
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
@@ -245,14 +303,27 @@ export function renderCertificateFront(
       const lineStartX = centerX - lineWidth / 2;
       const lineEndX = centerX + lineWidth / 2;
 
+      // Render custom signature image or QR code
+      if (sig.tipoAssinatura === 'imagem' && sig.imagemUrl) {
+        try {
+          doc.addImage(sig.imagemUrl, 'PNG', centerX - 20, 159, 40, 15);
+        } catch (e) {
+          console.warn('Erro ao renderizar imagem de assinatura:', e);
+        }
+      } else if (sig.tipoAssinatura === 'qrcode' && sig.qrCodeDataUrl) {
+        try {
+          doc.addImage(sig.qrCodeDataUrl, 'PNG', centerX - 7, 160, 14, 14);
+        } catch (e) {
+          console.warn('Erro ao renderizar QR Code de assinatura:', e);
+        }
+      } else if (index === 0 && config.incluirAssinaturaImagem && cachedSignaturePng) {
+        doc.addImage(cachedSignaturePng, 'PNG', centerX - 24, 159, 48, 16);
+      }
+
       // Draw signature line
       doc.setDrawColor(100, 116, 139);
       doc.setLineWidth(0.3);
       doc.line(lineStartX, 176, lineEndX, 176);
-
-      if (index === 0 && config.incluirAssinaturaImagem && cachedSignaturePng) {
-        doc.addImage(cachedSignaturePng, 'PNG', centerX - 24, 159, 48, 16);
-      }
 
       let lineY = 180.5;
       if (sig.nome) {
@@ -284,6 +355,16 @@ export function renderCertificateFront(
     doc.setFontSize(7);
     doc.setTextColor(50, 60, 80);
     doc.text(config.nomeUnidade, 26, 197);
+
+    if (config.incluirCodigoVerificacao !== false) {
+      const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(6.5);
+      doc.text(`Autenticação: ${verifCode}`, pageWidth / 2, 197, { align: 'center' });
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
     doc.text(config.cnpj, pageWidth - 26, 197, { align: 'right' });
   }
 }
@@ -418,6 +499,14 @@ export function renderCertificateBack(
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
   doc.text('Documento registrado na Instituição de Ensino de Trânsito - IET / Forte Caxias.', pageWidth / 2, pageHeight - 14, { align: 'center' });
+
+  if (config.incluirCodigoVerificacao !== false) {
+    const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Chave de Autenticação Digital: ${verifCode} • Validação oficial disponível via QR Code`, pageWidth / 2, pageHeight - 9, { align: 'center' });
+  }
 }
 
 /**
@@ -428,6 +517,21 @@ export async function generateSingleCertificatePdf(
   config: CourseConfig
 ): Promise<jsPDF> {
   await initPdfAssets();
+  await prepareSignatures(config);
+
+  registerCertificatesInStore([participant], config);
+
+  const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
+  participant.codigoVerificacao = verifCode;
+
+  let qrDataUrl: string | undefined;
+  if (config.incluirCodigoVerificacao !== false) {
+    try {
+      qrDataUrl = await generateQrCodeDataUrl(getVerificationUrl(verifCode), 120);
+    } catch (e) {
+      console.warn('Erro ao gerar QR Code de autenticação:', e);
+    }
+  }
 
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -436,7 +540,7 @@ export async function generateSingleCertificatePdf(
   });
 
   // Front page
-  renderCertificateFront(doc, participant, config);
+  renderCertificateFront(doc, participant, config, qrDataUrl);
 
   // Back page if enabled
   if (config.incluirVerso) {
@@ -448,6 +552,27 @@ export async function generateSingleCertificatePdf(
 }
 
 /**
+ * Generates an OS-safe filename for a certificate PDF using the participant's name
+ * Examples: "MARIA EDUARDA SILVA.pdf", "JOÃO PEDRO SANTOS.pdf"
+ */
+export function formatParticipantFileName(participant: Participant, fallbackIndex?: number): string {
+  let studentName = (participant.nome || '').trim();
+
+  if (!studentName) {
+    studentName = `Aluno_${(fallbackIndex ?? 0) + 1}`;
+  }
+
+  // Remove characters that are illegal in file names across Windows, Linux and macOS:
+  // \ / : * ? " < > |
+  const sanitized = studentName
+    .replace(/[\\/:*?"<>|\r\n\t]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return sanitized ? `${sanitized}.pdf` : `Aluno_${(fallbackIndex ?? 0) + 1}.pdf`;
+}
+
+/**
  * Downloads a single certificate immediately
  */
 export async function downloadSingleCertificate(
@@ -455,8 +580,8 @@ export async function downloadSingleCertificate(
   config: CourseConfig
 ): Promise<void> {
   const doc = await generateSingleCertificatePdf(participant, config);
-  const cleanName = participant.nome.replace(/[^a-zA-Z0-9]/g, '_');
-  doc.save(`Certificado_${participant.numeroCertificado.replace(/\//g, '-')}_${cleanName}.pdf`);
+  const fileName = formatParticipantFileName(participant);
+  doc.save(fileName);
 }
 
 /**
@@ -468,6 +593,9 @@ export async function generateMergedBatchPdf(
   onProgress?: (current: number, total: number) => void
 ): Promise<{ doc: jsPDF; benchmark: GenerationBenchmark }> {
   await initPdfAssets();
+  await prepareSignatures(config);
+
+  registerCertificatesInStore(participants, config);
 
   const startTime = performance.now();
   const doc = new jsPDF({
@@ -478,11 +606,23 @@ export async function generateMergedBatchPdf(
 
   for (let i = 0; i < participants.length; i++) {
     const p = participants[i];
+    const verifCode = p.codigoVerificacao || generateVerificationCode(p, config);
+    p.codigoVerificacao = verifCode;
+
+    let qrDataUrl: string | undefined;
+    if (config.incluirCodigoVerificacao !== false) {
+      try {
+        qrDataUrl = await generateQrCodeDataUrl(getVerificationUrl(verifCode), 120);
+      } catch (e) {
+        console.warn('Erro ao gerar QR Code de verificação em lote:', e);
+      }
+    }
+
     if (i > 0) {
       doc.addPage('a4', 'landscape');
     }
 
-    renderCertificateFront(doc, p, config);
+    renderCertificateFront(doc, p, config, qrDataUrl);
 
     if (config.incluirVerso) {
       doc.addPage('a4', 'landscape');
@@ -523,20 +663,39 @@ export async function generateAndDownloadZip(
   onProgress?: (current: number, total: number, message: string) => void
 ): Promise<GenerationBenchmark> {
   await initPdfAssets();
+  await prepareSignatures(config);
+
+  registerCertificatesInStore(participants, config);
+
   const startTime = performance.now();
 
   const zip = new JSZip();
   const folder = zip.folder(`Certificados_${config.siglaCurso}_${config.ano}`) || zip;
 
+  // Track filenames to prevent duplicate names from overwriting each other in the ZIP
+  const usedFileNames = new Map<string, number>();
+
   for (let i = 0; i < participants.length; i++) {
     const p = participants[i];
+    const verifCode = p.codigoVerificacao || generateVerificationCode(p, config);
+    p.codigoVerificacao = verifCode;
+
+    let qrDataUrl: string | undefined;
+    if (config.incluirCodigoVerificacao !== false) {
+      try {
+        qrDataUrl = await generateQrCodeDataUrl(getVerificationUrl(verifCode), 120);
+      } catch (e) {
+        console.warn('Erro ao gerar QR de verificação para ZIP:', e);
+      }
+    }
+
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
 
-    renderCertificateFront(doc, p, config);
+    renderCertificateFront(doc, p, config, qrDataUrl);
 
     if (config.incluirVerso) {
       doc.addPage('a4', 'landscape');
@@ -544,14 +703,26 @@ export async function generateAndDownloadZip(
     }
 
     const pdfBlob = doc.output('blob');
-    const cleanName = p.nome.replace(/[^a-zA-Z0-9]/g, '_');
-    const cleanNum = (p.numeroCertificado || `${i + 1}`).replace(/\//g, '-');
-    const fileName = `Certificado_${cleanNum}_${cleanName}.pdf`;
 
-    folder.file(fileName, pdfBlob);
+    // Name of the output file in ZIP: exactly the student's name
+    const baseFileName = formatParticipantFileName(p, i);
+    let finalFileName = baseFileName;
+
+    const lowerKey = baseFileName.toLowerCase();
+    const count = usedFileNames.get(lowerKey) || 0;
+    if (count > 0) {
+      const nameWithoutExt = baseFileName.replace(/\.pdf$/i, '');
+      const certNumPart = p.numeroCertificado
+        ? `_${p.numeroCertificado.replace(/[\\/:*?"<>|\s]/g, '-')}`
+        : `_(${count + 1})`;
+      finalFileName = `${nameWithoutExt}${certNumPart}.pdf`;
+    }
+    usedFileNames.set(lowerKey, count + 1);
+
+    folder.file(finalFileName, pdfBlob);
 
     if (onProgress) {
-      onProgress(i + 1, participants.length, `Gerando certificado ${i + 1} de ${participants.length}...`);
+      onProgress(i + 1, participants.length, `Gerando certificado: ${finalFileName} (${i + 1}/${participants.length})...`);
     }
   }
 

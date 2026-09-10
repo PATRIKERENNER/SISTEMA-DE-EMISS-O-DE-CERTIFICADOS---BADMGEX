@@ -1,3 +1,16 @@
+export type SignatureType = 'manual' | 'imagem' | 'qrcode';
+
+export interface SignatureItem {
+  id: string;
+  nome: string;
+  cargo: string;
+  cpf?: string;
+  tipoAssinatura?: SignatureType;
+  imagemUrl?: string; // base64 data URL
+  dadosQrCode?: string; // text or link for Gov.br / ICP-Brasil / signature verification
+  qrCodeDataUrl?: string; // generated QR code image
+}
+
 export interface Participant {
   id: string;
   numeroCertificado: string; // ex: 001/CVTE/2026
@@ -12,13 +25,8 @@ export interface Participant {
   notaDirecao?: string;
   notaSocorros?: string;
   notaConvivio?: string;
-}
-
-export interface SignatureItem {
-  id: string;
-  nome: string;
-  cargo: string;
-  cpf?: string;
+  codigoVerificacao?: string; // ex: SGCERT-2026-MOPP-8B3E-21A9
+  tipoCursoId?: string; // id do curso vinculado (ex: mopp, cargas, cve, escolar, coletivo)
 }
 
 export interface DisciplineItem {
@@ -29,7 +37,22 @@ export interface DisciplineItem {
   instrutor: string;
 }
 
+export type CourseTypeId = 'mopp' | 'cargas_indivisiveis' | 'cve' | 'transporte_escolar' | 'transporte_coletivo' | 'personalizado';
+
+export interface CoursePreset {
+  id: CourseTypeId;
+  nomeCurto: string; // ex: MOPP
+  nomeCompleto: string;
+  subtitulo: string;
+  sigla: string;
+  descricaoBreve: string;
+  cargaHorariaPadrao: string;
+  resolucaoPadrao: string;
+  disciplinas: DisciplineItem[];
+}
+
 export interface CourseConfig {
+  tipoCursoId?: CourseTypeId;
   nomeCurso: string; // ex: Curso Especializado para Condutores de Veículos de Transporte de Emergência
   subtituloCurso: string; // ex: Condutores de Veículos de Transporte de Emergência
   siglaCurso: string; // ex: CVTE
@@ -49,7 +72,33 @@ export interface CourseConfig {
   nomeUnidade: string; // ex: BASE ADMINISTRATIVA DO QUARTEL-GENERAL DO EXÉRCITO
   incluirVerso: boolean;
   incluirAssinaturaImagem?: boolean;
+  incluirCodigoVerificacao?: boolean;
   disciplinas: DisciplineItem[];
+}
+
+export interface CertificateVerificationRecord {
+  codigoVerificacao: string;
+  numeroCertificado: string;
+  nomeAluno: string;
+  cpf: string;
+  registro: string;
+  categoria: string;
+  cursoNome: string;
+  cursoSigla: string;
+  cargaHoraria: string;
+  periodo: string;
+  dataEmissao: string;
+  instituicao: string;
+  cnpj: string;
+  unidade: string;
+  resolucaoContran: string;
+  assinaturas: {
+    nome: string;
+    cargo: string;
+    cpf?: string;
+  }[];
+  timestampRegistro: string;
+  status: 'valido' | 'revogado';
 }
 
 export interface GenerationBenchmark {

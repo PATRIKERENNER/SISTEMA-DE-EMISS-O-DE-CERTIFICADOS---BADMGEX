@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Participant, CourseConfig } from '../types';
 import { SGExLogo, BAdmQgexLogo, DirectorSignature, BaroqueCorner, CertificateFlourish } from './OfficialLogos';
-import { Download, Printer, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CheckCircle, Sparkles, Zap } from 'lucide-react';
+import { Download, Printer, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, CheckCircle, Sparkles, Zap, ShieldCheck, QrCode } from 'lucide-react';
 import { downloadSingleCertificate } from '../services/pdfGenerator';
+import { generateVerificationCode, generateQrCodeDataUrl, getVerificationUrl } from '../services/verificationService';
 
 interface CertificatePreviewProps {
   participant: Participant;
@@ -11,6 +12,7 @@ interface CertificatePreviewProps {
   currentIndex: number;
   onSelectParticipant: (index: number) => void;
   onOpenBatchModal?: () => void;
+  onOpenVerification?: (code: string) => void;
 }
 
 export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
@@ -20,15 +22,33 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   currentIndex,
   onSelectParticipant,
   onOpenBatchModal,
+  onOpenVerification,
 }) => {
   const [viewSide, setViewSide] = useState<'front' | 'back'>('front');
   const [showVariableHighlights, setShowVariableHighlights] = useState<boolean>(false);
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [verificationQrDataUrl, setVerificationQrDataUrl] = useState<string>('');
 
   const periodo = participant.periodo || config.periodoGeral;
   const cargaHoraria = participant.cargaHoraria || config.cargaHorariaGeral;
   const dataEmissao = participant.dataEmissao || config.localDataGeral;
+  const verificationCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (config.incluirCodigoVerificacao !== false) {
+      const url = getVerificationUrl(verificationCode);
+      generateQrCodeDataUrl(url, 120)
+        .then((qr) => {
+          if (isMounted) setVerificationQrDataUrl(qr);
+        })
+        .catch((err) => console.warn('Falha ao gerar QR na prévia', err));
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [verificationCode, config.incluirCodigoVerificacao]);
 
   const handleDownload = async () => {
     try {
@@ -156,6 +176,18 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
           </div>
 
           {/* Quick Actions */}
+          {onOpenVerification && (
+            <button
+              id="btn-verify-current-cert"
+              onClick={() => onOpenVerification(verificationCode)}
+              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded-lg shadow-2xs transition active:scale-95"
+              title="Verificar autenticidade digital deste certificado no portal oficial"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Validar Autenticidade</span>
+            </button>
+          )}
+
           <button
             id="btn-download-individual-pdf"
             onClick={handleDownload}
@@ -383,9 +415,25 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                     return (
                       <div className="flex items-end justify-between">
                         <div className="flex flex-col items-center text-center">
-                          <div className="h-8 flex items-end justify-center">
-                            {config.incluirAssinaturaImagem && (
-                              <DirectorSignature className="w-36 h-12 -mb-2" />
+                          <div className="h-10 flex items-end justify-center">
+                            {sig.tipoAssinatura === 'imagem' && sig.imagemUrl ? (
+                              <img
+                                src={sig.imagemUrl}
+                                alt={sig.nome || 'Assinatura'}
+                                className="h-10 max-w-[150px] object-contain -mb-1 select-none pointer-events-none"
+                              />
+                            ) : sig.tipoAssinatura === 'qrcode' && (sig.qrCodeDataUrl || sig.textoQrCode) ? (
+                              <div className="p-0.5 border border-slate-300 rounded bg-white -mb-0.5 flex items-center justify-center">
+                                {sig.qrCodeDataUrl ? (
+                                  <img src={sig.qrCodeDataUrl} alt="QR Assinatura" className="w-9 h-9 object-contain" />
+                                ) : (
+                                  <QrCode className="w-8 h-8 text-blue-800" />
+                                )}
+                              </div>
+                            ) : (
+                              config.incluirAssinaturaImagem && (
+                                <DirectorSignature className="w-36 h-12 -mb-2" />
+                              )
                             )}
                           </div>
                           <div className="w-60 border-t border-slate-900 pt-1">
@@ -407,6 +455,36 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                           </div>
                         </div>
 
+                        {/* Central Digital Authenticity Seal */}
+                        {config.incluirCodigoVerificacao !== false && (
+                          <div
+                            onClick={() => onOpenVerification?.(verificationCode)}
+                            className="cursor-pointer group flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition text-left"
+                            title="Clique para abrir a validação oficial do certificado"
+                          >
+                            {verificationQrDataUrl ? (
+                              <img
+                                src={verificationQrDataUrl}
+                                alt="QR Verificação"
+                                className="w-10 h-10 border border-slate-300 rounded p-0.5 bg-white"
+                              />
+                            ) : (
+                              <QrCode className="w-9 h-9 text-slate-400" />
+                            )}
+                            <div>
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-600 group-hover:text-blue-700 flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3 text-emerald-600" /> Autenticidade Digital
+                              </span>
+                              <p className="text-[9.5px] font-mono font-bold text-slate-800">
+                                {verificationCode}
+                              </p>
+                              <span className="text-[8px] text-slate-500 underline group-hover:text-blue-600">
+                                Validar no portal oficial
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
                         {/* CNPJ & Military Unit Footer */}
                         <div className="text-right">
                           <p className="text-[11px] font-bold text-slate-900 tracking-wider">
@@ -426,9 +504,25 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       <div className="flex items-start justify-around gap-4 w-full">
                         {activeSignatures.map((sig, idx) => (
                           <div key={sig.id || `sig-${idx}`} className="flex-1 max-w-[220px] flex flex-col items-center text-center">
-                            <div className="h-7 flex items-end justify-center">
-                              {idx === 0 && config.incluirAssinaturaImagem && (
-                                <DirectorSignature className="w-32 h-10 -mb-2" />
+                            <div className="h-10 flex items-end justify-center">
+                              {sig.tipoAssinatura === 'imagem' && sig.imagemUrl ? (
+                                <img
+                                  src={sig.imagemUrl}
+                                  alt={sig.nome || 'Assinatura'}
+                                  className="h-9 max-w-[130px] object-contain -mb-1 select-none pointer-events-none"
+                                />
+                              ) : sig.tipoAssinatura === 'qrcode' && (sig.qrCodeDataUrl || sig.textoQrCode) ? (
+                                <div className="p-0.5 border border-slate-300 rounded bg-white -mb-0.5 flex items-center justify-center">
+                                  {sig.qrCodeDataUrl ? (
+                                    <img src={sig.qrCodeDataUrl} alt="QR Assinatura" className="w-8 h-8 object-contain" />
+                                  ) : (
+                                    <QrCode className="w-8 h-8 text-blue-800" />
+                                  )}
+                                </div>
+                              ) : (
+                                idx === 0 && config.incluirAssinaturaImagem && (
+                                  <DirectorSignature className="w-32 h-10 -mb-2" />
+                                )
                               )}
                             </div>
                             <div className="w-full border-t border-slate-900 pt-1">
@@ -455,6 +549,16 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       {/* CNPJ & Military Unit Footer centered below multi-signatures */}
                       <div className="text-center pt-1 border-t border-slate-200/60 flex items-center justify-between text-slate-700 text-[10px] font-semibold">
                         <span>{config.nomeUnidade}</span>
+                        {config.incluirCodigoVerificacao !== false && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenVerification?.(verificationCode)}
+                            className="text-[9.5px] font-mono text-blue-700 hover:underline flex items-center gap-1 font-bold"
+                          >
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            Autenticação: {verificationCode}
+                          </button>
+                        )}
                         <span className="font-bold font-mono">{config.cnpj}</span>
                       </div>
                     </div>
@@ -549,10 +653,20 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
               </div>
 
               {/* Back Footer */}
-              <div className="text-center border-t border-slate-200 pt-2">
+              <div className="text-center border-t border-slate-200 pt-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[10px] text-slate-500">
                   Documento autêntico expedido pela Base Administrativa do QGEx / Forte Caxias nos termos da legislação de trânsito em vigor.
                 </p>
+                {config.incluirCodigoVerificacao !== false && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenVerification?.(verificationCode)}
+                    className="text-[9.5px] font-mono text-blue-700 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                    Chave: {verificationCode}
+                  </button>
+                )}
               </div>
             </div>
           )}

@@ -247,20 +247,30 @@ export const BatchGeneratorModal: React.FC<BatchGeneratorModalProps> = ({
                   id="btn-run-batch-zip"
                   onClick={() => runBatchGeneration('zip')}
                   disabled={isRunning}
-                  className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-md shadow-blue-200/50 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex flex-col items-center justify-center gap-0.5 bg-blue-700 hover:bg-blue-800 active:scale-98 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-blue-200/50 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  <FileArchive className="w-4 h-4" />
-                  {isRunning && mode === 'zip' ? 'Gerando ZIP...' : `Baixar em ZIP (${participants.length} PDFs)`}
+                  <div className="flex items-center gap-2">
+                    <FileArchive className="w-4 h-4" />
+                    <span>{isRunning && mode === 'zip' ? 'Gerando ZIP...' : `Baixar em ZIP (${participants.length} PDFs)`}</span>
+                  </div>
+                  <span className="text-[10.5px] font-normal text-blue-200">
+                    PDFs nomeados com o Nome do Aluno
+                  </span>
                 </button>
 
                 <button
                   id="btn-run-batch-merged"
                   onClick={() => runBatchGeneration('merged')}
                   disabled={isRunning}
-                  className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex flex-col items-center justify-center gap-0.5 bg-slate-800 hover:bg-slate-900 active:scale-98 text-white font-bold py-3 px-4 rounded-xl shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
-                  <FileText className="w-4 h-4" />
-                  {isRunning && mode === 'merged' ? 'Gerando PDF...' : `PDF Único (${participants.length} Alunos)`}
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    <span>{isRunning && mode === 'merged' ? 'Gerando PDF...' : `PDF Único (${participants.length} Alunos)`}</span>
+                  </div>
+                  <span className="text-[10.5px] font-normal text-slate-300">
+                    Arquivo unificado para impressão contínua
+                  </span>
                 </button>
               </div>
             </>
