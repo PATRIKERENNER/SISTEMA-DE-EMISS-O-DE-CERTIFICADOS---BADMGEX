@@ -31,7 +31,7 @@ export default function App() {
   const [participants, setParticipants] = useState<Participant[]>(INITIAL_PARTICIPANTS);
   const [courseConfig, setCourseConfig] = useState<CourseConfig>(DEFAULT_COURSE_CONFIG);
   const [selectedParticipantIndex, setSelectedParticipantIndex] = useState<number>(0);
-  const [activeCourseId, setActiveCourseId] = useState<CourseTypeId>('transporte_coletivo');
+  const [activeCourseId, setActiveCourseId] = useState<CourseTypeId>('cvte');
   const [activeTab, setActiveTab] = useState<'preview' | 'participants' | 'config' | 'verification'>('preview');
   const [verificationCodeQuery, setVerificationCodeQuery] = useState<string>('');
   const [isBatchModalOpen, setIsBatchModalOpen] = useState<boolean>(false);
@@ -41,7 +41,11 @@ export default function App() {
   const participantCountByCourse: Record<string, number> = {};
   OFFICIAL_COURSE_PRESETS.forEach(preset => {
     participantCountByCourse[preset.id] = participants.filter(p => 
-      p.tipoCursoId === preset.id || (p.numeroCertificado && p.numeroCertificado.toUpperCase().includes(preset.sigla.toUpperCase()))
+      p.tipoCursoId === preset.id || 
+      (p.tipoCursoId === 'cve' && preset.id === 'cvte') ||
+      (p.tipoCursoId === 'cargas_indivisiveis' && preset.id === 'cvtci') ||
+      (p.tipoCursoId === 'transporte_coletivo' && preset.id === 'ctcp') ||
+      (p.numeroCertificado && p.numeroCertificado.toUpperCase().includes(preset.sigla.toUpperCase()))
     ).length;
   });
 

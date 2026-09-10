@@ -37,7 +37,16 @@ export interface DisciplineItem {
   instrutor: string;
 }
 
-export type CourseTypeId = 'mopp' | 'cargas_indivisiveis' | 'cve' | 'transporte_escolar' | 'transporte_coletivo' | 'personalizado';
+export type CourseTypeId = 
+  | 'cvte' 
+  | 'mopp' 
+  | 'ctcp' 
+  | 'cvtci' 
+  | 'cve' 
+  | 'cargas_indivisiveis' 
+  | 'transporte_coletivo' 
+  | 'transporte_escolar' 
+  | 'personalizado';
 
 export interface CoursePreset {
   id: CourseTypeId;

@@ -1,8 +1,9 @@
 import { Participant, CourseConfig } from '../types';
 
 export const DEFAULT_COURSE_CONFIG: CourseConfig = {
-  nomeCurso: 'Curso Especializado para Condutores de Veículos de Transporte de Emergência',
-  subtituloCurso: 'Condutores de Veículos de Transporte de Emergência',
+  tipoCursoId: 'cvte',
+  nomeCurso: 'CURSO ESPECIALIZADO PARA CONDUTORES DE VEÍCULOS DE TRANSPORTE DE EMERGÊNCIA',
+  subtituloCurso: 'Condutores de Veículos de Transporte de Emergência (CVTE)',
   siglaCurso: 'CVTE',
   ano: '2026',
   instituicao: 'A Instituição de Ensino de Trânsito da Base Administrativa do Quartel-General do Exército – Forte Caxias –',

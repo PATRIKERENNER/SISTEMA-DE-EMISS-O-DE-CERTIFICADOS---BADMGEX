@@ -30,16 +30,17 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
 }) => {
   const getCourseIcon = (id: CourseTypeId) => {
     switch (id) {
-      case 'mopp':
-        return <Flame className="w-4 h-4 text-amber-600" />;
-      case 'cargas_indivisiveis':
-        return <Truck className="w-4 h-4 text-indigo-600" />;
+      case 'cvte':
       case 'cve':
         return <Siren className="w-4 h-4 text-red-600" />;
-      case 'transporte_escolar':
-        return <GraduationCap className="w-4 h-4 text-yellow-600" />;
+      case 'mopp':
+        return <Flame className="w-4 h-4 text-amber-600" />;
+      case 'ctcp':
       case 'transporte_coletivo':
         return <Bus className="w-4 h-4 text-emerald-600" />;
+      case 'cvtci':
+      case 'cargas_indivisiveis':
+        return <Truck className="w-4 h-4 text-indigo-600" />;
       default:
         return <Sparkles className="w-4 h-4 text-blue-600" />;
     }
@@ -98,7 +99,7 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({
       </div>
 
       {/* Course Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {OFFICIAL_COURSE_PRESETS.map((preset) => {
           const isSelected = activeCourseId === preset.id;
           const count = participantCountByCourse[preset.id] || 0;
