@@ -588,24 +588,13 @@ export const CourseConfigForm: React.FC<CourseConfigFormProps> = ({
                         <button
                           type="button"
                           onClick={() => handleSignatureTypeChange(idx, 'imagem')}
-                          className={`px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 transition ${
+                          className={`px-2.5 py-1 rounded text-[11px] font-bold flex items-center gap-1 transition ${
                             tipo === 'imagem'
                               ? 'bg-blue-600 text-white shadow-2xs'
                               : 'text-slate-600 hover:text-slate-900'
                           }`}
                         >
-                          <ImageIcon className="w-3 h-3" /> Imagem
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSignatureTypeChange(idx, 'qrcode')}
-                          className={`px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 transition ${
-                            tipo === 'qrcode'
-                              ? 'bg-blue-600 text-white shadow-2xs'
-                              : 'text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          <QrCode className="w-3 h-3" /> QR Code
+                          <ImageIcon className="w-3 h-3" /> Imagem / Rubrica
                         </button>
                       </div>
 
@@ -702,43 +691,6 @@ export const CourseConfigForm: React.FC<CourseConfigFormProps> = ({
                                 className="hidden"
                               />
                             </label>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Conditional: QR Code signature data & preview */}
-                    {tipo === 'qrcode' && (
-                      <div className="p-3 bg-white border border-slate-200 rounded-lg grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                        <div className="sm:col-span-9">
-                          <label className="text-[10px] font-bold text-slate-700 block mb-1">
-                            Link do Certificado Digital / Assinatura Gov.br ou ICP-Brasil
-                          </label>
-                          <input
-                            type="text"
-                            value={sig.dadosQrCode || ''}
-                            onChange={(e) => handleSignatureQrCodeChange(idx, e.target.value)}
-                            placeholder="Ex: https://validar.iti.gov.br ou Assinatura Eletrônica Gov.br"
-                            className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono text-[11px]"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-3 flex items-center justify-center">
-                          {sig.qrCodeDataUrl ? (
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={sig.qrCodeDataUrl}
-                                alt="QR Code"
-                                className="w-12 h-12 rounded border border-slate-200 p-0.5 bg-white"
-                              />
-                              <span className="text-[10px] font-bold text-emerald-700">
-                                QR Pronto
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-slate-400 italic">
-                              Digite o texto ou link para gerar o QR Code
-                            </span>
                           )}
                         </div>
                       </div>

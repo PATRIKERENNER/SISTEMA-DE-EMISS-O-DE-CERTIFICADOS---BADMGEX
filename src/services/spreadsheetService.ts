@@ -100,32 +100,60 @@ export function mapRowsToParticipants(rows: Record<string, any>[]): Participant[
       normalizedRow['data'] ||
       undefined;
 
-    // Grade fields
+    // Grade fields: LT (Legislação de Trânsito), DD (Direção Defensiva), PSAI (Primeiros Socorros / Atendimento Inicial), CCS (Comportamento / Convívio Social / Cidadania)
     const notaLegislacao =
+      normalizedRow['lt'] ||
+      normalizedRow['notalt'] ||
+      normalizedRow['mencaolt'] ||
       normalizedRow['notalegislacao'] ||
+      normalizedRow['notadelegislacao'] ||
       normalizedRow['legislacao'] ||
       normalizedRow['leg'] ||
+      normalizedRow['legislacaodetransito'] ||
+      normalizedRow['disciplinalt'] ||
+      normalizedRow['modulolt'] ||
       undefined;
 
     const notaDirecao =
+      normalizedRow['dd'] ||
+      normalizedRow['notadd'] ||
+      normalizedRow['mencaodd'] ||
       normalizedRow['notadirecao'] ||
+      normalizedRow['notadedirecao'] ||
       normalizedRow['direcao'] ||
       normalizedRow['direcaodefensiva'] ||
-      normalizedRow['dd'] ||
+      normalizedRow['disciplinadd'] ||
+      normalizedRow['modulodd'] ||
       undefined;
 
     const notaSocorros =
+      normalizedRow['psai'] ||
+      normalizedRow['notapsai'] ||
+      normalizedRow['mencaopsai'] ||
+      normalizedRow['ps'] ||
+      normalizedRow['notaps'] ||
       normalizedRow['notasocorros'] ||
+      normalizedRow['notadesocorros'] ||
       normalizedRow['socorros'] ||
       normalizedRow['primeirossocorros'] ||
-      normalizedRow['ps'] ||
+      normalizedRow['atendimentoinicial'] ||
+      normalizedRow['disciplinapsai'] ||
+      normalizedRow['modulopsai'] ||
       undefined;
 
     const notaConvivio =
+      normalizedRow['ccs'] ||
+      normalizedRow['notaccs'] ||
+      normalizedRow['mencaoccs'] ||
       normalizedRow['notaconvivio'] ||
+      normalizedRow['notadeconvivio'] ||
       normalizedRow['convivio'] ||
-      normalizedRow['relacionamentointerpessoal'] ||
+      normalizedRow['conviviosocial'] ||
       normalizedRow['meioambiente'] ||
+      normalizedRow['relacionamentointerpessoal'] ||
+      normalizedRow['convivenciacidada'] ||
+      normalizedRow['disciplinaccs'] ||
+      normalizedRow['moduloccs'] ||
       undefined;
 
     participants.push({
@@ -222,10 +250,10 @@ export function downloadExcelTemplate(): void {
       Periodo: '08 a 16 de junho de 2026',
       CargaHoraria: '50h/a',
       DataEmissao: 'Brasília-DF, 18 de junho de 2026',
-      NotaLegislacao: '10',
-      NotaDirecao: '10',
-      NotaSocorros: '10',
-      NotaConvivio: '10',
+      LT: '10',
+      DD: '10',
+      PSAI: '10',
+      CCS: '10',
     },
     {
       NumeroTurma: '001/CVTE/2026',
@@ -236,10 +264,10 @@ export function downloadExcelTemplate(): void {
       Periodo: '08 a 16 de junho de 2026',
       CargaHoraria: '50h/a',
       DataEmissao: 'Brasília-DF, 18 de junho de 2026',
-      NotaLegislacao: '10',
-      NotaDirecao: '10',
-      NotaSocorros: '10',
-      NotaConvivio: '10',
+      LT: '9,5',
+      DD: '10',
+      PSAI: '10',
+      CCS: '10',
     },
   ];
 
@@ -255,10 +283,10 @@ export function downloadExcelTemplate(): void {
     { wch: 28 }, // Periodo
     { wch: 14 }, // CargaHoraria
     { wch: 32 }, // DataEmissao
-    { wch: 16 }, // NotaLegislacao
-    { wch: 14 }, // NotaDirecao
-    { wch: 16 }, // NotaSocorros
-    { wch: 16 }, // NotaConvivio
+    { wch: 14 }, // LT
+    { wch: 14 }, // DD
+    { wch: 14 }, // PSAI
+    { wch: 14 }, // CCS
   ];
 
   const workbook = XLSX.utils.book_new();

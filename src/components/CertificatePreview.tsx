@@ -50,6 +50,8 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
     };
   }, [verificationCode, config.incluirCodigoVerificacao]);
 
+  const numTurma = config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
+
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
@@ -329,55 +331,59 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   <span>{config.instituicao} ({config.instrucaoDetran}) certifica que </span>
                   
                   {/* Nome */}
-                  <span className={`font-bold ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-extrabold' : 'text-slate-950'}`}>
+                  <span className={`font-black ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-black' : 'text-slate-950'}`}>
                     {participant.nome}
                   </span>
                   
                   <span>, inscrito no CPF nº </span>
                   
                   {/* CPF */}
-                  <span className={`font-bold ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2' : 'text-slate-950'}`}>
+                  <span className={`font-black ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-black' : 'text-slate-950'}`}>
                     {participant.cpf}
                   </span>
                   
                   <span> e no Nº REGISTRO </span>
                   
                   {/* Registro */}
-                  <span className={`font-bold ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2' : 'text-slate-950'}`}>
+                  <span className={`font-black ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-black' : 'text-slate-950'}`}>
                     {participant.registro}
                   </span>
                   
                   <span>, categoria </span>
                   
                   {/* Categoria */}
-                  <span className={`font-bold ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2' : 'text-slate-950'}`}>
+                  <span className={`font-black ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-black' : 'text-slate-950'}`}>
                     “{participant.categoria}”
                   </span>
                   
                   <span>, concluiu com aproveitamento o </span>
-                  <span className="font-bold text-slate-950">{config.nomeCurso}</span>
+                  <span className="font-black text-slate-950">{config.nomeCurso}</span>
                   <span>, ministrado pela IET - Forte Caxias, no período de </span>
                   
                   {/* Periodo */}
-                  <span className={`font-bold ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2' : 'text-slate-950'}`}>
+                  <span className={`font-black ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-black' : 'text-slate-950'}`}>
                     {periodo}
                   </span>
                   
                   <span>, com carga horária de </span>
                   
                   {/* Carga Horaria */}
-                  <span className={`font-bold ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2' : 'text-slate-950'}`}>
+                  <span className={`font-black ${showVariableHighlights ? 'text-red-700 underline decoration-red-500 decoration-2 font-black' : 'text-slate-950'}`}>
                     {cargaHoraria}
                   </span>
                   
-                  <span>, com validade de {config.validadeAnos} após o término do curso, conforme {config.resolucaoContran}.</span>
+                  <span>, com validade de </span>
+                  <span className="font-black text-slate-950">{config.validadeAnos}</span>
+                  <span> após o término do curso, conforme </span>
+                  <span className="font-black text-slate-950">{config.resolucaoContran}</span>
+                  <span>.</span>
                 </p>
 
                 {/* Issue Date */}
                 <div className="text-center mt-6">
-                  <span className="font-bold text-[15px] text-slate-900">
+                  <span className="font-black text-[15.5px] text-slate-950">
                     {showVariableHighlights ? (
-                      <span className="text-red-700 underline decoration-red-500 decoration-2">
+                      <span className="text-red-700 underline decoration-red-500 decoration-2 font-black">
                         {dataEmissao}
                       </span>
                     ) : (
@@ -387,7 +393,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 </div>
               </div>
 
-              {/* Signatures & Footer Section */}
+              {/* Signatures & Footer Section (Clean official layout without QR Code) */}
               <div className="pt-2 px-2 border-t border-transparent flex flex-col gap-3">
                 {/* Dynamic Signatures Row */}
                 {(() => {
@@ -407,14 +413,14 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   if (activeSignatures.length === 0) {
                     return (
                       <div className="flex items-end justify-between">
-                        <div className="w-56 border-t border-slate-800 pt-1 text-center">
-                          <p className="text-xs font-bold text-slate-900">Assinatura da Autoridade</p>
+                        <div className="w-56 border-t-2 border-slate-900 pt-1 text-center">
+                          <p className="text-xs font-black text-slate-950 uppercase">Assinatura da Autoridade</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[11px] font-bold text-slate-900 tracking-wider">
+                          <p className="text-[11px] font-black text-slate-950 tracking-wider">
                             {config.cnpj}
                           </p>
-                          <p className="text-[10px] font-semibold text-slate-700 tracking-tight uppercase">
+                          <p className="text-[10px] font-black text-slate-800 tracking-tight uppercase">
                             {config.nomeUnidade}
                           </p>
                         </div>
@@ -432,77 +438,39 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                               <img
                                 src={sig.imagemUrl}
                                 alt={sig.nome || 'Assinatura'}
-                                className="h-10 max-w-[150px] object-contain -mb-1 select-none pointer-events-none"
+                                className="h-10 max-w-[160px] object-contain -mb-1 select-none pointer-events-none"
                               />
-                            ) : sig.tipoAssinatura === 'qrcode' && (sig.qrCodeDataUrl || sig.textoQrCode) ? (
-                              <div className="p-0.5 border border-slate-300 rounded bg-white -mb-0.5 flex items-center justify-center">
-                                {sig.qrCodeDataUrl ? (
-                                  <img src={sig.qrCodeDataUrl} alt="QR Assinatura" className="w-9 h-9 object-contain" />
-                                ) : (
-                                  <QrCode className="w-8 h-8 text-blue-800" />
-                                )}
-                              </div>
                             ) : (
                               config.incluirAssinaturaImagem && (
                                 <DirectorSignature className="w-36 h-12 -mb-2" />
                               )
                             )}
                           </div>
-                          <div className="w-60 border-t border-slate-900 pt-1">
+                          <div className="w-64 border-t-2 border-slate-900 pt-1">
                             {sig.nome && (
-                              <p className="text-xs font-bold text-slate-900 leading-tight">
+                              <p className="text-xs font-black text-slate-950 leading-tight uppercase">
                                 {sig.nome}
                               </p>
                             )}
                             {sig.cargo && (
-                              <p className="text-[11px] text-slate-700 leading-tight">
+                              <p className="text-[11px] font-bold text-slate-800 leading-tight mt-0.5">
                                 {sig.cargo}
                               </p>
                             )}
                             {sig.cpf && (
-                              <p className="text-[10px] text-slate-600 font-mono">
-                                {sig.cpf}
+                              <p className="text-[10px] font-bold text-slate-700 font-mono mt-0.5">
+                                CPF: {sig.cpf}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        {/* Central Digital Authenticity Seal */}
-                        {config.incluirCodigoVerificacao !== false && (
-                          <div
-                            onClick={() => onOpenVerification?.(verificationCode)}
-                            className="cursor-pointer group flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition text-left"
-                            title="Clique para abrir a validação oficial do certificado"
-                          >
-                            {verificationQrDataUrl ? (
-                              <img
-                                src={verificationQrDataUrl}
-                                alt="QR Verificação"
-                                className="w-10 h-10 border border-slate-300 rounded p-0.5 bg-white"
-                              />
-                            ) : (
-                              <QrCode className="w-9 h-9 text-slate-400" />
-                            )}
-                            <div>
-                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-600 group-hover:text-blue-700 flex items-center gap-1">
-                                <ShieldCheck className="w-3 h-3 text-emerald-600" /> Autenticidade Digital
-                              </span>
-                              <p className="text-[9.5px] font-mono font-bold text-slate-800">
-                                {verificationCode}
-                              </p>
-                              <span className="text-[8px] text-slate-500 underline group-hover:text-blue-600">
-                                Validar no portal oficial
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
                         {/* CNPJ & Military Unit Footer */}
                         <div className="text-right">
-                          <p className="text-[11px] font-bold text-slate-900 tracking-wider">
+                          <p className="text-[11px] font-black text-slate-950 tracking-wider">
                             {config.cnpj}
                           </p>
-                          <p className="text-[10px] font-semibold text-slate-700 tracking-tight uppercase">
+                          <p className="text-[10px] font-black text-slate-800 tracking-tight uppercase">
                             {config.nomeUnidade}
                           </p>
                         </div>
@@ -523,33 +491,25 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                                   alt={sig.nome || 'Assinatura'}
                                   className="h-9 max-w-[130px] object-contain -mb-1 select-none pointer-events-none"
                                 />
-                              ) : sig.tipoAssinatura === 'qrcode' && (sig.qrCodeDataUrl || sig.textoQrCode) ? (
-                                <div className="p-0.5 border border-slate-300 rounded bg-white -mb-0.5 flex items-center justify-center">
-                                  {sig.qrCodeDataUrl ? (
-                                    <img src={sig.qrCodeDataUrl} alt="QR Assinatura" className="w-8 h-8 object-contain" />
-                                  ) : (
-                                    <QrCode className="w-8 h-8 text-blue-800" />
-                                  )}
-                                </div>
                               ) : (
                                 idx === 0 && config.incluirAssinaturaImagem && (
                                   <DirectorSignature className="w-32 h-10 -mb-2" />
                                 )
                               )}
                             </div>
-                            <div className="w-full border-t border-slate-900 pt-1">
+                            <div className="w-full border-t-2 border-slate-900 pt-1">
                               {sig.nome && (
-                                <p className="text-[11px] font-bold text-slate-900 leading-tight">
+                                <p className="text-[11px] font-black text-slate-950 leading-tight uppercase">
                                   {sig.nome}
                                 </p>
                               )}
                               {sig.cargo && (
-                                <p className="text-[10px] text-slate-700 leading-tight mt-0.5">
+                                <p className="text-[10px] font-bold text-slate-800 leading-tight mt-0.5">
                                   {sig.cargo}
                                 </p>
                               )}
                               {sig.cpf && (
-                                <p className="text-[9.5px] text-slate-600 font-mono">
+                                <p className="text-[9.5px] font-bold text-slate-700 font-mono mt-0.5">
                                   {sig.cpf}
                                 </p>
                               )}
@@ -558,20 +518,13 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                         ))}
                       </div>
 
-                      {/* CNPJ & Military Unit Footer centered below multi-signatures */}
-                      <div className="text-center pt-1 border-t border-slate-200/60 flex items-center justify-between text-slate-700 text-[10px] font-semibold">
-                        <span>{config.nomeUnidade}</span>
-                        {config.incluirCodigoVerificacao !== false && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenVerification?.(verificationCode)}
-                            className="text-[9.5px] font-mono text-blue-700 hover:underline flex items-center gap-1 font-bold"
-                          >
-                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                            Autenticação: {verificationCode}
-                          </button>
-                        )}
-                        <span className="font-bold font-mono">{config.cnpj}</span>
+                      <div className="text-right border-t border-slate-300 pt-1">
+                        <p className="text-[11px] font-black text-slate-950 tracking-wider">
+                          {config.cnpj}
+                        </p>
+                        <p className="text-[10px] font-black text-slate-800 uppercase">
+                          {config.nomeUnidade}
+                        </p>
                       </div>
                     </div>
                   );
@@ -579,10 +532,10 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
               </div>
             </div>
           ) : (
-            /* BACK OF CERTIFICATE (CONTEÚDO PROGRAMÁTICO) */
+            /* BACK OF CERTIFICATE (CONTEÚDO PROGRAMÁTICO & NOTAS / MENÇÕES) */
             <div className="relative z-10 flex flex-col justify-between h-full px-6 py-2">
               {/* Back Header */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                 <SGExLogo className="w-16 h-20" />
                 
                 <div className="text-center flex-1 px-4">
@@ -592,8 +545,8 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   <h3 className="text-sm font-bold text-slate-800 tracking-wider">
                     “FORTE CAXIAS”
                   </h3>
-                  <div className="mt-2 inline-block bg-white px-4 py-0.5 rounded-full border border-slate-300">
-                    <span className="text-xs font-extrabold text-slate-800 tracking-widest uppercase">
+                  <div className="mt-1 inline-block bg-white px-4 py-0.5 rounded-full border border-slate-300">
+                    <span className="text-xs font-black text-slate-900 tracking-widest uppercase">
                       CONTEÚDO PROGRAMÁTICO
                     </span>
                   </div>
@@ -601,27 +554,85 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
                 <div className="flex flex-col items-center">
                   <BAdmQgexLogo className="w-16 h-20" />
-                  <span className="text-xs font-bold text-slate-900 mt-1">
-                    {config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}
+                  <span className="text-xs font-black text-slate-950 mt-1">
+                    {numTurma}
                   </span>
                 </div>
               </div>
 
-              {/* Table */}
+                  {/* Concluinte Identification Bar (Bold variable data) */}
+                  <div className="bg-slate-100/90 border border-slate-300 rounded px-3 py-1.5 flex flex-wrap items-center justify-between text-xs my-1 text-slate-900 shadow-2xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-600 font-bold uppercase text-[11px]">CONCLUENTE:</span>
+                      <span className="font-black text-slate-950 uppercase">{participant.nome}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-[11px]">
+                      <div>
+                        <span className="text-slate-600 font-bold">CPF: </span>
+                        <span className="font-black text-slate-950">{participant.cpf}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600 font-bold">REG. CNH: </span>
+                        <span className="font-black text-slate-950">{participant.registro}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-600 font-bold">TURMA: </span>
+                        <span className="font-black text-slate-950">{numTurma}</span>
+                      </div>
+                    </div>
+                  </div>
+
+              {/* Student Grades Panel: LT / DD / PSAI / CCS */}
+              <div className="grid grid-cols-4 gap-2 my-1">
+                <div className="bg-white/95 border-2 border-slate-900 rounded p-1.5 text-center shadow-2xs">
+                  <div className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                    LEGISLAÇÃO (LT)
+                  </div>
+                  <div className="text-base font-black text-slate-950 mt-0.5">
+                    {participant.notaLegislacao || '10'}
+                  </div>
+                </div>
+                <div className="bg-white/95 border-2 border-slate-900 rounded p-1.5 text-center shadow-2xs">
+                  <div className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                    DIREÇÃO DEFENSIVA (DD)
+                  </div>
+                  <div className="text-base font-black text-slate-950 mt-0.5">
+                    {participant.notaDirecao || '10'}
+                  </div>
+                </div>
+                <div className="bg-white/95 border-2 border-slate-900 rounded p-1.5 text-center shadow-2xs">
+                  <div className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                    1º SOCORROS (PSAI)
+                  </div>
+                  <div className="text-base font-black text-slate-950 mt-0.5">
+                    {participant.notaSocorros || '10'}
+                  </div>
+                </div>
+                <div className="bg-white/95 border-2 border-slate-900 rounded p-1.5 text-center shadow-2xs">
+                  <div className="text-[10px] font-black text-slate-800 uppercase tracking-tight">
+                    CONVÍVIO SOCIAL (CCS)
+                  </div>
+                  <div className="text-base font-black text-slate-950 mt-0.5">
+                    {participant.notaConvivio || '10'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Table of Programmatic Content with Grades */}
               <div className="my-auto">
                 <table className={`w-full border-collapse border-2 border-slate-900 text-center ${config.incluirMarcaDagua !== false ? 'bg-white/80' : 'bg-white'}`}>
                   <thead>
                     <tr className={`${config.incluirMarcaDagua !== false ? 'bg-white/85' : 'bg-white'} border-b-2 border-slate-900`}>
-                      <th className="py-2.5 px-4 text-xs font-extrabold text-slate-900 border-r border-slate-900 uppercase tracking-wider w-[32%]">
+                      <th className="py-2 px-4 text-xs font-black text-slate-950 border-r border-slate-900 uppercase tracking-wider w-[32%]">
                         DISCIPLINA
                       </th>
-                      <th className="py-2.5 px-3 text-xs font-extrabold text-slate-900 border-r border-slate-900 uppercase tracking-wider w-[16%]">
+                      <th className="py-2 px-3 text-xs font-black text-slate-950 border-r border-slate-900 uppercase tracking-wider w-[16%]">
                         CARGA HORÁRIA
                       </th>
-                      <th className="py-2.5 px-3 text-xs font-extrabold text-slate-900 border-r border-slate-900 uppercase tracking-wider w-[14%]">
-                        AVALIAÇÃO
+                      <th className="py-2 px-3 text-xs font-black text-slate-950 border-r border-slate-900 uppercase tracking-wider w-[16%] bg-amber-50/50">
+                        NOTA / MENÇÃO
                       </th>
-                      <th className="py-2.5 px-4 text-xs font-extrabold text-slate-900 uppercase tracking-wider w-[38%]">
+                      <th className="py-2 px-4 text-xs font-black text-slate-950 uppercase tracking-wider w-[36%]">
                         INSTRUTOR
                       </th>
                     </tr>
@@ -634,27 +645,27 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                         participant.notaSocorros,
                         participant.notaConvivio,
                       ];
-                      const grade = studentGrades[idx] || disc.avaliacaoPadrao;
+                      const grade = studentGrades[idx] || disc.avaliacaoPadrao || '10';
 
                       return (
                         <tr
                           key={disc.id}
                           className={`border-b border-slate-800 ${config.incluirMarcaDagua !== false ? 'bg-white/75' : 'bg-white'}`}
                         >
-                          <td className="py-3 px-4 text-xs font-bold text-slate-900 border-r border-slate-800 text-left">
+                          <td className="py-2.5 px-4 text-xs font-black text-slate-950 border-r border-slate-800 text-left">
                             {disc.nome}
                           </td>
-                          <td className="py-3 px-3 text-xs font-bold text-slate-900 border-r border-slate-800">
+                          <td className="py-2.5 px-3 text-xs font-black text-slate-950 border-r border-slate-800">
                             {disc.cargaHoraria}
                           </td>
-                          <td className="py-3 px-3 text-xs font-extrabold text-slate-900 border-r border-slate-800">
+                          <td className="py-2.5 px-3 text-xs font-black text-slate-950 border-r border-slate-800 bg-amber-50/30">
                             {showVariableHighlights ? (
-                              <span className="text-red-700 underline font-black">{grade}</span>
+                              <span className="text-red-700 underline font-black text-sm">{grade}</span>
                             ) : (
-                              grade
+                              <span className="text-sm font-black text-slate-950">{grade}</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-xs font-bold text-slate-800 text-left">
+                          <td className="py-2.5 px-4 text-xs font-bold text-slate-900 text-left">
                             {disc.instrutor}
                           </td>
                         </tr>
@@ -664,20 +675,15 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 </table>
               </div>
 
-              {/* Back Footer */}
-              <div className="text-center border-t border-slate-200 pt-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[10px] text-slate-500">
+              {/* Back Footer (Clean official institutional layout without QR Code) */}
+              <div className="text-center border-t border-slate-300 pt-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10.5px] font-bold text-slate-700">
                   Documento autêntico expedido pela Base Administrativa do QGEx / Forte Caxias nos termos da legislação de trânsito em vigor.
                 </p>
                 {config.incluirCodigoVerificacao !== false && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenVerification?.(verificationCode)}
-                    className="text-[9.5px] font-mono text-blue-700 hover:underline font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                    Chave: {verificationCode}
-                  </button>
+                  <span className="text-[10px] font-mono font-black text-slate-800">
+                    Chave de Registro: {verificationCode}
+                  </span>
                 )}
               </div>
             </div>

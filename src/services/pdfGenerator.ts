@@ -153,6 +153,106 @@ async function prepareSignatures(config: CourseConfig): Promise<void> {
   }
 }
 
+interface TextSegment {
+  text: string;
+  bold: boolean;
+}
+
+interface TextWord {
+  text: string;
+  isSpace: boolean;
+  bold: boolean;
+}
+
+/**
+ * Draws a cleanly justified paragraph supporting mixed normal and bold styles
+ */
+function drawFormattedJustifiedParagraph(
+  doc: jsPDF,
+  segments: TextSegment[],
+  startX: number,
+  startY: number,
+  maxWidth: number,
+  lineHeight: number
+): number {
+  const words: TextWord[] = [];
+  segments.forEach((seg) => {
+    const parts = seg.text.split(/(\s+)/);
+    parts.forEach((p) => {
+      if (!p) return;
+      if (/^\s+$/.test(p)) {
+        words.push({ text: ' ', isSpace: true, bold: seg.bold });
+      } else {
+        words.push({ text: p, isSpace: false, bold: seg.bold });
+      }
+    });
+  });
+
+  function getWordWidth(w: TextWord): number {
+    doc.setFont('times', w.bold ? 'bold' : 'normal');
+    return doc.getTextWidth(w.text);
+  }
+
+  doc.setFont('times', 'normal');
+  const normalSpaceWidth = doc.getTextWidth(' ');
+
+  const lines: TextWord[][] = [];
+  let currentLine: TextWord[] = [];
+  let currentLineWidth = 0;
+
+  for (let i = 0; i < words.length; i++) {
+    const item = words[i];
+    if (item.isSpace) continue;
+
+    const wWidth = getWordWidth(item);
+    const spaceNeeded = currentLine.length > 0 ? normalSpaceWidth : 0;
+
+    if (currentLine.length > 0 && currentLineWidth + spaceNeeded + wWidth > maxWidth) {
+      lines.push(currentLine);
+      currentLine = [item];
+      currentLineWidth = wWidth;
+    } else {
+      currentLine.push(item);
+      currentLineWidth += spaceNeeded + wWidth;
+    }
+  }
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  let y = startY;
+  lines.forEach((line, lineIndex) => {
+    const isLastLine = lineIndex === lines.length - 1;
+
+    let totalTextWidth = 0;
+    line.forEach((w) => {
+      totalTextWidth += getWordWidth(w);
+    });
+
+    const numGaps = line.length - 1;
+    let spaceWidth = normalSpaceWidth;
+    if (!isLastLine && numGaps > 0) {
+      const remainingSpace = maxWidth - totalTextWidth;
+      spaceWidth = Math.max(normalSpaceWidth, remainingSpace / numGaps);
+    }
+
+    let x = startX;
+    line.forEach((w, wIdx) => {
+      doc.setFont('times', w.bold ? 'bold' : 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.text(w.text, x, y);
+      x += getWordWidth(w);
+      if (wIdx < numGaps) {
+        x += spaceWidth;
+      }
+    });
+
+    y += lineHeight;
+  });
+
+  return y;
+}
+
 /**
  * Draws Front Page (Frente do Certificado)
  */
@@ -160,7 +260,7 @@ export function renderCertificateFront(
   doc: jsPDF,
   participant: Participant,
   config: CourseConfig,
-  verificationQrDataUrl?: string
+  _verificationQrDataUrl?: string
 ): void {
   const pageWidth = 297;
 
@@ -196,40 +296,55 @@ export function renderCertificateFront(
   doc.circle(pageWidth / 2 - 8, 49, 1.5, 'F');
   doc.circle(pageWidth / 2 + 8, 49, 1.5, 'F');
 
-  // 6. Certificate Registration Number (Right under B ADM logo) - Número da Turma (idêntico para todos os alunos)
+  // 6. Certificate Registration Number (Right under B ADM logo) - Número da Turma (em negrito)
   const numTurma = config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(15, 23, 42);
   doc.text(numTurma, pageWidth - 46 + 11, 56, { align: 'center' });
 
-  // 7. Main Certificate Text (Rich formatted paragraph with dynamic participant details)
+  // 7. Main Certificate Text: ALL VARIABLE DATA IN BOLD
   const periodo = participant.periodo || config.periodoGeral;
   const cargaHoraria = participant.cargaHoraria || config.cargaHorariaGeral;
 
-  // Let's write the text cleanly
-  doc.setFont('times', 'normal');
-  doc.setFontSize(12.5);
-  doc.setTextColor(20, 20, 20);
-
   const startX = 22;
   const textWidth = pageWidth - 44; // 253mm
-  let currentY = 78;
+  const currentY = 78;
 
-  const fullText = `${config.instituicao} (${config.instrucaoDetran}) certifica que ${participant.nome}, inscrito no CPF nº ${participant.cpf} e no Nº REGISTRO ${participant.registro}, categoria “${participant.categoria}”, concluiu com aproveitamento o ${config.nomeCurso}, ministrado pela IET - Forte Caxias, no período de ${periodo}, com carga horária de ${cargaHoraria}, com validade de ${config.validadeAnos} após o término do curso, conforme ${config.resolucaoContran}.`;
+  doc.setFontSize(12.5);
 
-  const lines = doc.splitTextToSize(fullText, textWidth);
-  doc.text(lines, startX, currentY, { align: 'justify', maxWidth: textWidth, lineHeightFactor: 1.55 });
+  const segments: TextSegment[] = [
+    { text: `${config.instituicao} (${config.instrucaoDetran}) certifica que `, bold: false },
+    { text: participant.nome, bold: true },
+    { text: ', inscrito no CPF nº ', bold: false },
+    { text: participant.cpf, bold: true },
+    { text: ' e no Nº REGISTRO ', bold: false },
+    { text: participant.registro, bold: true },
+    { text: ', categoria ', bold: false },
+    { text: `“${participant.categoria}”`, bold: true },
+    { text: ', concluiu com aproveitamento o ', bold: false },
+    { text: config.nomeCurso, bold: true },
+    { text: ', ministrado pela IET - Forte Caxias, no período de ', bold: false },
+    { text: periodo, bold: true },
+    { text: ', com carga horária de ', bold: false },
+    { text: cargaHoraria, bold: true },
+    { text: ', com validade de ', bold: false },
+    { text: `${config.validadeAnos}`, bold: true },
+    { text: ' após o término do curso, conforme ', bold: false },
+    { text: config.resolucaoContran, bold: true },
+    { text: '.', bold: false },
+  ];
 
-  // 8. Issue Date (Center-bottom)
+  drawFormattedJustifiedParagraph(doc, segments, startX, currentY, textWidth, 9.5);
+
+  // 8. Issue Date (Center-bottom) - em negrito
   const dataEmissao = participant.dataEmissao || config.localDataGeral;
-  currentY = 149;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(15, 23, 42);
-  doc.text(dataEmissao, pageWidth / 2, currentY, { align: 'center' });
+  doc.text(dataEmissao, pageWidth / 2, 149, { align: 'center' });
 
-  // 9. Dynamic Signatures & Footer Section
+  // 9. Signatures & Footer Section (Clean official layout without QR Code)
   const activeSignatures = (config.assinaturas && config.assinaturas.length > 0)
     ? config.assinaturas
     : (config.nomeDiretor || config.cargoDiretor)
@@ -254,19 +369,13 @@ export function renderCertificateFront(
         } catch (e) {
           console.warn('Erro ao inserir imagem de assinatura:', e);
         }
-      } else if (sig.tipoAssinatura === 'qrcode' && sig.qrCodeDataUrl) {
-        try {
-          doc.addImage(sig.qrCodeDataUrl, 'PNG', 49, 161, 14, 14);
-        } catch (e) {
-          console.warn('Erro ao inserir QR Code de assinatura:', e);
-        }
       } else if (config.incluirAssinaturaImagem && cachedSignaturePng) {
         doc.addImage(cachedSignaturePng, 'PNG', 32, 160, 48, 16);
       }
     }
 
-    doc.setDrawColor(100, 116, 139);
-    doc.setLineWidth(0.3);
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.4);
     doc.line(26, 178, 86, 178);
 
     if (sig?.nome) {
@@ -277,50 +386,31 @@ export function renderCertificateFront(
     }
 
     if (sig?.cargo) {
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(30, 41, 59);
       doc.text(sig.cargo, 56, 187, { align: 'center' });
     }
 
     if (sig?.cpf) {
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(7.5);
       doc.setTextColor(50, 60, 80);
-      doc.text(sig.cpf, 56, 191, { align: 'center' });
+      doc.text(`CPF: ${sig.cpf}`, 56, 191, { align: 'center' });
     }
 
-    // Authenticity Digital Verification in the center/right
-    if (config.incluirCodigoVerificacao !== false) {
-      const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
-      if (verificationQrDataUrl) {
-        try {
-          doc.addImage(verificationQrDataUrl, 'PNG', 142, 166, 16, 16);
-        } catch (e) {
-          console.warn('Erro ao inserir QR de autenticidade:', e);
-        }
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(6);
-        doc.setTextColor(30, 41, 59);
-        doc.text('AUTENTICIDADE DIGITAL', 150, 185, { align: 'center' });
-        doc.setFont('courier', 'bold');
-        doc.setFontSize(5.5);
-        doc.text(verifCode, 150, 188, { align: 'center' });
-      }
-    }
-
-    // Military Base Unit / CNPJ Footer (Right Bottom)
+    // Military Base Unit / CNPJ Footer (Right Bottom) - em negrito, sem QR Code
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(15, 23, 42);
     doc.text(config.cnpj, pageWidth - 26, 185, { align: 'right' });
-    doc.setFontSize(7.5);
+    doc.setFontSize(8);
     doc.text(config.nomeUnidade, pageWidth - 26, 190, { align: 'right' });
   } else {
-    // Multiple signatures (2, 3 or more) distributed horizontally
+    // Multiple signatures distributed horizontally (without QR Code)
     const numSigs = activeSignatures.length;
     const startX = 26;
-    const totalWidth = 245; // 297 - 52
+    const totalWidth = 245;
     const lineWidth = Math.min(64, Math.floor(totalWidth / numSigs - 8));
     const step = totalWidth / numSigs;
 
@@ -329,26 +419,19 @@ export function renderCertificateFront(
       const lineStartX = centerX - lineWidth / 2;
       const lineEndX = centerX + lineWidth / 2;
 
-      // Render custom signature image or QR code
       if (sig.tipoAssinatura === 'imagem' && sig.imagemUrl) {
         try {
           doc.addImage(sig.imagemUrl, 'PNG', centerX - 20, 159, 40, 15);
         } catch (e) {
           console.warn('Erro ao renderizar imagem de assinatura:', e);
         }
-      } else if (sig.tipoAssinatura === 'qrcode' && sig.qrCodeDataUrl) {
-        try {
-          doc.addImage(sig.qrCodeDataUrl, 'PNG', centerX - 7, 160, 14, 14);
-        } catch (e) {
-          console.warn('Erro ao renderizar QR Code de assinatura:', e);
-        }
       } else if (index === 0 && config.incluirAssinaturaImagem && cachedSignaturePng) {
         doc.addImage(cachedSignaturePng, 'PNG', centerX - 24, 159, 48, 16);
       }
 
       // Draw signature line
-      doc.setDrawColor(100, 116, 139);
-      doc.setLineWidth(0.3);
+      doc.setDrawColor(15, 23, 42);
+      doc.setLineWidth(0.4);
       doc.line(lineStartX, 176, lineEndX, 176);
 
       let lineY = 180.5;
@@ -361,7 +444,7 @@ export function renderCertificateFront(
       }
 
       if (sig.cargo) {
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(7);
         doc.setTextColor(30, 41, 59);
         doc.text(sig.cargo, centerX, lineY, { align: 'center', maxWidth: lineWidth + 4 });
@@ -369,34 +452,27 @@ export function renderCertificateFront(
       }
 
       if (sig.cpf) {
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('helvetica', 'bold');
         doc.setFontSize(6.5);
         doc.setTextColor(70, 80, 95);
-        doc.text(sig.cpf, centerX, lineY, { align: 'center', maxWidth: lineWidth + 4 });
+        doc.text(`CPF: ${sig.cpf}`, centerX, lineY, { align: 'center', maxWidth: lineWidth + 4 });
       }
     });
 
     // Sub-footer below multiple signatures
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(50, 60, 80);
     doc.text(config.nomeUnidade, 26, 197);
 
-    if (config.incluirCodigoVerificacao !== false) {
-      const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
-      doc.setFont('courier', 'bold');
-      doc.setFontSize(6.5);
-      doc.text(`Autenticação: ${verifCode}`, pageWidth / 2, 197, { align: 'center' });
-    }
-
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.text(config.cnpj, pageWidth - 26, 197, { align: 'right' });
   }
 }
 
 /**
- * Draws Back Page (Verso do Certificado / Conteúdo Programático)
+ * Draws Back Page (Verso do Certificado / Conteúdo Programático com Notas / Menções dos Alunos Concluintes)
  */
 export function renderCertificateBack(
   doc: jsPDF,
@@ -428,56 +504,115 @@ export function renderCertificateBack(
   // 4. Sub-header & Number
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
-  doc.text('CONTEÚDO PROGRAMÁTICO', pageWidth / 2, 48, { align: 'center' });
+  doc.text('CONTEÚDO PROGRAMÁTICO', pageWidth / 2, 45, { align: 'center' });
 
   const numTurma = config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
-  doc.text(numTurma, pageWidth - 26, 48, { align: 'right' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(numTurma, pageWidth - 26, 45, { align: 'right' });
 
-  // 5. Programmatic Content Table
   const tableX = 22;
-  const tableY = 56;
   const tableWidth = pageWidth - 44; // 253mm
-  const colWidths = [75, 40, 38, 100]; // Total: 253mm
   const withWatermark = config ? config.incluirMarcaDagua !== false : true;
+
+  // 5. Concluinte Identification Bar (Verso) - Todos os dados variáveis em negrito
+  const idBarY = 50;
+  if (!withWatermark) {
+    doc.setFillColor(248, 250, 252);
+    doc.rect(tableX, idBarY, tableWidth, 8, 'FD');
+  }
+  doc.setDrawColor(30, 41, 59);
+  doc.setLineWidth(0.4);
+  doc.rect(tableX, idBarY, tableWidth, 8, 'S');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`CONCLUENTE: ${participant.nome}`, tableX + 3, idBarY + 5.3);
+  doc.text(`CPF: ${participant.cpf}    |    REG. CNH: ${participant.registro}    |    TURMA: ${numTurma}`, pageWidth - 25, idBarY + 5.3, { align: 'right' });
+
+  // 6. Quadro de Resumo de Notas / Menções (LT / DD / PSAI / CCS)
+  const notaLT = participant.notaLegislacao || '10';
+  const notaDD = participant.notaDirecao || '10';
+  const notaPSAI = participant.notaSocorros || '10';
+  const notaCCS = participant.notaConvivio || '10';
+
+  const gradesBarY = 60;
+  const numBoxes = 4;
+  const boxGap = 3;
+  const boxWidth = (tableWidth - (numBoxes - 1) * boxGap) / numBoxes; // ~61mm
+  const boxHeight = 13;
+
+  const gradeBoxes = [
+    { title: 'LEGISLAÇÃO (LT)', value: notaLT },
+    { title: 'DIREÇÃO DEFENSIVA (DD)', value: notaDD },
+    { title: '1º SOCORROS (PSAI)', value: notaPSAI },
+    { title: 'CONVÍVIO SOCIAL (CCS)', value: notaCCS },
+  ];
+
+  gradeBoxes.forEach((b, i) => {
+    const bx = tableX + i * (boxWidth + boxGap);
+    if (!withWatermark) {
+      doc.setFillColor(255, 255, 255);
+      doc.rect(bx, gradesBarY, boxWidth, boxHeight, 'FD');
+    }
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.5);
+    doc.rect(bx, gradesBarY, boxWidth, boxHeight, 'S');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(51, 65, 85);
+    doc.text(b.title, bx + boxWidth / 2, gradesBarY + 4.2, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(b.value, bx + boxWidth / 2, gradesBarY + 10.2, { align: 'center' });
+  });
+
+  // 7. Programmatic Content Table with Grades
+  const tableY = 76;
+  const colWidths = [76, 37, 40, 100]; // Total: 253mm
 
   // Table Header
   if (!withWatermark) {
     doc.setFillColor(255, 255, 255);
-    doc.rect(tableX, tableY, tableWidth, 12, 'FD');
+    doc.rect(tableX, tableY, tableWidth, 9, 'FD');
   }
   doc.setDrawColor(30, 41, 59);
   doc.setLineWidth(0.6);
-  doc.rect(tableX, tableY, tableWidth, 12, 'S');
+  doc.rect(tableX, tableY, tableWidth, 9, 'S');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(15, 23, 42);
 
   let currentX = tableX;
-  doc.text('DISCIPLINA', currentX + colWidths[0] / 2, tableY + 7.5, { align: 'center' });
+  doc.text('DISCIPLINA', currentX + colWidths[0] / 2, tableY + 6, { align: 'center' });
   currentX += colWidths[0];
-  doc.text('CARGA HORÁRIA', currentX + colWidths[1] / 2, tableY + 7.5, { align: 'center' });
+  doc.text('CARGA HORÁRIA', currentX + colWidths[1] / 2, tableY + 6, { align: 'center' });
   currentX += colWidths[1];
-  doc.text('AVALIAÇÃO', currentX + colWidths[2] / 2, tableY + 7.5, { align: 'center' });
+  doc.text('NOTA / MENÇÃO', currentX + colWidths[2] / 2, tableY + 6, { align: 'center' });
   currentX += colWidths[2];
-  doc.text('INSTRUTOR', currentX + colWidths[3] / 2, tableY + 7.5, { align: 'center' });
+  doc.text('INSTRUTOR', currentX + colWidths[3] / 2, tableY + 6, { align: 'center' });
 
   // Vertical header dividers
   currentX = tableX;
   for (let i = 0; i < 3; i++) {
     currentX += colWidths[i];
-    doc.line(currentX, tableY, currentX, tableY + 12);
+    doc.line(currentX, tableY, currentX, tableY + 9);
   }
 
   // Rows
   const participantGrades = [
-    participant.notaLegislacao || '10',
-    participant.notaDirecao || '9,0',
-    participant.notaSocorros || '10',
-    participant.notaConvivio || '10',
+    notaLT,
+    notaDD,
+    notaPSAI,
+    notaCCS,
   ];
 
-  let rowY = tableY + 12;
+  let rowY = tableY + 9;
   const rowHeight = 22;
 
   config.disciplinas.forEach((disc, idx) => {
@@ -487,7 +622,7 @@ export function renderCertificateBack(
     }
 
     // Row borders
-    doc.setDrawColor(50, 50, 50);
+    doc.setDrawColor(30, 41, 59);
     doc.setLineWidth(0.4);
     doc.rect(tableX, rowY, tableWidth, rowHeight, 'S');
 
@@ -498,25 +633,30 @@ export function renderCertificateBack(
       doc.line(cx, rowY, cx, rowY + rowHeight);
     }
 
-    // Text Values
+    // Disciplina (em negrito)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.5);
+    doc.setFontSize(9);
     doc.setTextColor(15, 23, 42);
-
-    // Disciplina
     const discLines = doc.splitTextToSize(disc.nome, colWidths[0] - 8);
     const discY = rowY + (rowHeight - (discLines.length * 4)) / 2 + 3;
     doc.text(discLines, tableX + colWidths[0] / 2, discY, { align: 'center' });
 
-    // Carga Horaria
+    // Carga Horaria (em negrito)
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
     doc.text(disc.cargaHoraria, tableX + colWidths[0] + colWidths[1] / 2, rowY + rowHeight / 2 + 1.5, { align: 'center' });
 
-    // Avaliacao
-    const grade = participantGrades[idx] || disc.avaliacaoPadrao;
+    // NOTA / MENÇÃO (em destaque negrito)
+    const grade = participantGrades[idx] || disc.avaliacaoPadrao || '10';
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
     doc.text(grade, tableX + colWidths[0] + colWidths[1] + colWidths[2] / 2, rowY + rowHeight / 2 + 1.5, { align: 'center' });
 
-    // Instrutor
+    // Instrutor (em negrito)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(30, 41, 59);
     const instrLines = doc.splitTextToSize(disc.instrutor, colWidths[3] - 8);
     const instrY = rowY + (rowHeight - (instrLines.length * 4)) / 2 + 3;
     doc.text(instrLines, tableX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] / 2, instrY, { align: 'center' });
@@ -524,18 +664,18 @@ export function renderCertificateBack(
     rowY += rowHeight;
   });
 
-  // Footer notes
+  // 8. Footer notes (Sem qualquer menção ou elemento de QR Code)
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
-  doc.text('Documento registrado na Instituição de Ensino de Trânsito - IET / Forte Caxias.', pageWidth / 2, pageHeight - 14, { align: 'center' });
+  doc.text('Documento registrado na Instituição de Ensino de Trânsito - IET / Forte Caxias.', pageWidth / 2, pageHeight - 12, { align: 'center' });
 
   if (config.incluirCodigoVerificacao !== false) {
     const verifCode = participant.codigoVerificacao || generateVerificationCode(participant, config);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(51, 65, 85);
-    doc.text(`Chave de Autenticação Digital: ${verifCode} • Validação oficial disponível via QR Code`, pageWidth / 2, pageHeight - 9, { align: 'center' });
+    doc.text(`Chave de Registro: ${verifCode}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
   }
 }
 
