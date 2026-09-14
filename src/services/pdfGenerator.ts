@@ -190,7 +190,7 @@ function drawFormattedJustifiedParagraph(
 
   function getWordWidth(w: TextWord): number {
     doc.setFont('times', w.bold ? 'bold' : 'normal');
-    return doc.getTextWidth(w.text);
+    return doc.getTextWidth(w.text) + (w.bold ? 0.08 : 0);
   }
 
   doc.setFont('times', 'normal');
@@ -238,9 +238,17 @@ function drawFormattedJustifiedParagraph(
 
     let x = startX;
     line.forEach((w, wIdx) => {
-      doc.setFont('times', w.bold ? 'bold' : 'normal');
-      doc.setTextColor(15, 23, 42);
-      doc.text(w.text, x, y);
+      if (w.bold) {
+        doc.setFont('times', 'bold');
+        doc.setTextColor(0, 0, 0); // Preto profundo para máximo contraste em negrito
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.12); // Realce de espessura para garantir negrito nítido e proeminente no PDF
+        doc.text(w.text, x, y, { renderingMode: 'fillThenStroke' });
+      } else {
+        doc.setFont('times', 'normal');
+        doc.setTextColor(30, 41, 59);
+        doc.text(w.text, x, y, { renderingMode: 'fill' });
+      }
       x += getWordWidth(w);
       if (wIdx < numGaps) {
         x += spaceWidth;
@@ -300,8 +308,10 @@ export function renderCertificateFront(
   const numTurma = config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(15, 23, 42);
-  doc.text(numTurma, pageWidth - 46 + 11, 56, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.12);
+  doc.text(numTurma, pageWidth - 46 + 11, 56, { align: 'center', renderingMode: 'fillThenStroke' });
 
   // 7. Main Certificate Text: ALL VARIABLE DATA IN BOLD
   const periodo = participant.periodo || config.periodoGeral;
@@ -341,8 +351,10 @@ export function renderCertificateFront(
   const dataEmissao = participant.dataEmissao || config.localDataGeral;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.setTextColor(15, 23, 42);
-  doc.text(dataEmissao, pageWidth / 2, 149, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.12);
+  doc.text(dataEmissao, pageWidth / 2, 149, { align: 'center', renderingMode: 'fillThenStroke' });
 
   // 9. Signatures & Footer Section (Clean official layout without QR Code)
   const activeSignatures = (config.assinaturas && config.assinaturas.length > 0)

@@ -316,7 +316,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                         {config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}
                       </span>
                     ) : (
-                      <span>{config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}</span>
+                      <span className="font-black text-slate-950">{config.numeroTurma || participant.numeroCertificado || `001/${config.siglaCurso}/${config.ano}`}</span>
                     )}
                   </div>
                 </div>
