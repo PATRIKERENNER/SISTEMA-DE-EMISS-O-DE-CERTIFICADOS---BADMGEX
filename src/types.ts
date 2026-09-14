@@ -81,6 +81,8 @@ export interface CourseConfig {
   cnpj: string; // ex: 21.744.847/0001-50
   nomeUnidade: string; // ex: BASE ADMINISTRATIVA DO QUARTEL-GENERAL DO EXÉRCITO
   incluirVerso: boolean;
+  incluirMarcaDagua?: boolean; // Imagem de fundo nos dois lados do certificado (Praça dos Cristais / Concha Acústica QGEx com Bandeira Nacional)
+  imagemFundoUrl?: string;
   incluirAssinaturaImagem?: boolean;
   incluirCodigoVerificacao?: boolean;
   disciplinas: DisciplineItem[];

@@ -247,25 +247,37 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
             height: '690px',
             minHeight: '690px',
           }}
-          className="relative bg-white text-slate-900 shadow-2xl rounded-sm p-10 flex flex-col justify-between select-none border-2 border-slate-900"
+          className="relative bg-white text-slate-900 shadow-2xl rounded-sm p-10 flex flex-col justify-between select-none border-2 border-slate-900 overflow-hidden"
         >
+          {/* Background Watermark Image (Praça dos Cristais / Concha Acústica QGEx com Bandeira Nacional) */}
+          {config.incluirMarcaDagua !== false && (
+            <div className="absolute inset-2 pointer-events-none select-none z-0 overflow-hidden">
+              <img
+                src={config.imagemFundoUrl || '/fundo-certificado.jpg'}
+                alt="Fundo Oficial Certificado"
+                className="w-full h-full object-cover opacity-90"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          )}
+
           {/* Ornate Baroque Corners */}
-          <div className="absolute top-2 left-2 pointer-events-none">
+          <div className="absolute top-2 left-2 pointer-events-none z-1">
             <BaroqueCorner className="w-16 h-16" />
           </div>
-          <div className="absolute top-2 right-2 pointer-events-none rotate-90">
+          <div className="absolute top-2 right-2 pointer-events-none rotate-90 z-1">
             <BaroqueCorner className="w-16 h-16" />
           </div>
-          <div className="absolute bottom-2 left-2 pointer-events-none -rotate-90">
+          <div className="absolute bottom-2 left-2 pointer-events-none -rotate-90 z-1">
             <BaroqueCorner className="w-16 h-16" />
           </div>
-          <div className="absolute bottom-2 right-2 pointer-events-none rotate-180">
+          <div className="absolute bottom-2 right-2 pointer-events-none rotate-180 z-1">
             <BaroqueCorner className="w-16 h-16" />
           </div>
 
           {/* Inner Double Thin Border */}
-          <div className="absolute inset-4 border border-slate-800 pointer-events-none"></div>
-          <div className="absolute inset-5 border border-slate-400/60 pointer-events-none"></div>
+          <div className="absolute inset-4 border border-slate-800 pointer-events-none z-1"></div>
+          <div className="absolute inset-5 border border-slate-400/60 pointer-events-none z-1"></div>
 
           {viewSide === 'front' ? (
             /* FRONT OF CERTIFICATE */
@@ -597,9 +609,9 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
               {/* Table */}
               <div className="my-auto">
-                <table className="w-full border-collapse border-2 border-slate-900 text-center bg-white">
+                <table className={`w-full border-collapse border-2 border-slate-900 text-center ${config.incluirMarcaDagua !== false ? 'bg-white/80' : 'bg-white'}`}>
                   <thead>
-                    <tr className="bg-white border-b-2 border-slate-900">
+                    <tr className={`${config.incluirMarcaDagua !== false ? 'bg-white/85' : 'bg-white'} border-b-2 border-slate-900`}>
                       <th className="py-2.5 px-4 text-xs font-extrabold text-slate-900 border-r border-slate-900 uppercase tracking-wider w-[32%]">
                         DISCIPLINA
                       </th>
@@ -627,7 +639,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       return (
                         <tr
                           key={disc.id}
-                          className="border-b border-slate-800 bg-white"
+                          className={`border-b border-slate-800 ${config.incluirMarcaDagua !== false ? 'bg-white/75' : 'bg-white'}`}
                         >
                           <td className="py-3 px-4 text-xs font-bold text-slate-900 border-r border-slate-800 text-left">
                             {disc.nome}

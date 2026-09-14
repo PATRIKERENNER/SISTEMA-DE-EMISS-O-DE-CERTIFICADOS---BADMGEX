@@ -40,6 +40,8 @@ export const DEFAULT_COURSE_CONFIG: CourseConfig = {
   cnpj: 'CNPJ Nº 21.744.847/0001-50',
   nomeUnidade: 'BASE ADMINISTRATIVA DO QUARTEL-GENERAL DO EXÉRCITO',
   incluirVerso: true,
+  incluirMarcaDagua: true,
+  imagemFundoUrl: '/fundo-certificado.jpg',
   incluirAssinaturaImagem: false,
   disciplinas: [
     {

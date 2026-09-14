@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Participant, CourseConfig, GenerationBenchmark } from '../types';
 import { SGEX_BASE64_PNG, BADM_BASE64_PNG } from '../data/officialLogosBase64';
+import { CERTIFICATE_BACKGROUND_BASE64_JPG } from '../data/certificateBackgroundBase64';
 import {
   generateVerificationCode,
   generateQrCodeDataUrl,
@@ -44,6 +45,7 @@ async function loadImageAsDataUrl(src: string): Promise<string> {
 // Cached Official Image Assets directly from /public directory
 let cachedSGExPng = SGEX_BASE64_PNG;
 let cachedBAdmPng = BADM_BASE64_PNG;
+let cachedBackgroundJpg = CERTIFICATE_BACKGROUND_BASE64_JPG;
 let cachedSignaturePng = '';
 
 /**
@@ -51,9 +53,10 @@ let cachedSignaturePng = '';
  */
 export async function initPdfAssets(): Promise<void> {
   try {
-    const [sgex, badm] = await Promise.all([
+    const [sgex, badm, bg] = await Promise.all([
       loadImageAsDataUrl('/Secretaria-Geral redimen.png'),
       loadImageAsDataUrl('/badmqgex.min.png'),
+      loadImageAsDataUrl('/fundo-certificado.jpg'),
     ]);
     if (sgex && sgex.startsWith('data:image')) {
       cachedSGExPng = sgex;
@@ -61,24 +64,47 @@ export async function initPdfAssets(): Promise<void> {
     if (badm && badm.startsWith('data:image')) {
       cachedBAdmPng = badm;
     }
+    if (bg && bg.startsWith('data:image')) {
+      cachedBackgroundJpg = bg;
+    }
   } catch {
     // Fallback to embedded official base64 if fetch fails
     cachedSGExPng = SGEX_BASE64_PNG;
     cachedBAdmPng = BADM_BASE64_PNG;
+    cachedBackgroundJpg = CERTIFICATE_BACKGROUND_BASE64_JPG;
   }
 }
 
 /**
- * Draws the ornate certificate border in A4 landscape (297 x 210 mm) with pure white background
+ * Draws the ornate certificate border in A4 landscape (297 x 210 mm) with background watermark
  */
-function drawCertificateBorder(doc: jsPDF) {
+function drawCertificateBorder(doc: jsPDF, config?: CourseConfig) {
   const margin = 8;
   const pageWidth = 297;
   const pageHeight = 210;
 
-  // Pure White Base Background (No shading or watermarks)
+  // Pure White Base Background
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  // Background Watermark Image (Praça dos Cristais / Concha Acústica QGEx com Bandeira Nacional)
+  const shouldIncludeWatermark = config ? config.incluirMarcaDagua !== false : true;
+  if (shouldIncludeWatermark && cachedBackgroundJpg) {
+    try {
+      doc.addImage(
+        cachedBackgroundJpg,
+        'JPEG',
+        margin + 2.5,
+        margin + 2.5,
+        pageWidth - 2 * (margin + 2.5),
+        pageHeight - 2 * (margin + 2.5),
+        'bg_cert_watermark',
+        'FAST'
+      );
+    } catch (e) {
+      console.warn('Failed to render background watermark image', e);
+    }
+  }
 
   // Outer primary black border
   doc.setDrawColor(20, 20, 20);
@@ -139,7 +165,7 @@ export function renderCertificateFront(
   const pageWidth = 297;
 
   // 1. Decorative border & watermark
-  drawCertificateBorder(doc);
+  drawCertificateBorder(doc, config);
 
   // 2. Official Crest Logos
   if (cachedSGExPng) {
@@ -380,8 +406,8 @@ export function renderCertificateBack(
   const pageWidth = 297;
   const pageHeight = 210;
 
-  // 1. Ornate Border
-  drawCertificateBorder(doc);
+  // 1. Ornate Border & Watermark
+  drawCertificateBorder(doc, config);
 
   // 2. Logos on Top
   if (cachedSGExPng) {
@@ -412,10 +438,13 @@ export function renderCertificateBack(
   const tableY = 56;
   const tableWidth = pageWidth - 44; // 253mm
   const colWidths = [75, 40, 38, 100]; // Total: 253mm
+  const withWatermark = config ? config.incluirMarcaDagua !== false : true;
 
-  // Table Header (Pure White)
-  doc.setFillColor(255, 255, 255);
-  doc.rect(tableX, tableY, tableWidth, 12, 'FD');
+  // Table Header
+  if (!withWatermark) {
+    doc.setFillColor(255, 255, 255);
+    doc.rect(tableX, tableY, tableWidth, 12, 'FD');
+  }
   doc.setDrawColor(30, 41, 59);
   doc.setLineWidth(0.6);
   doc.rect(tableX, tableY, tableWidth, 12, 'S');
@@ -452,9 +481,10 @@ export function renderCertificateBack(
   const rowHeight = 22;
 
   config.disciplinas.forEach((disc, idx) => {
-    // Pure White row background
-    doc.setFillColor(255, 255, 255);
-    doc.rect(tableX, rowY, tableWidth, rowHeight, 'FD');
+    if (!withWatermark) {
+      doc.setFillColor(255, 255, 255);
+      doc.rect(tableX, rowY, tableWidth, rowHeight, 'FD');
+    }
 
     // Row borders
     doc.setDrawColor(50, 50, 50);

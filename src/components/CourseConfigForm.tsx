@@ -304,6 +304,38 @@ export const CourseConfigForm: React.FC<CourseConfigFormProps> = ({
             </div>
           </div>
 
+          {/* Opções de Fundo e Marca d'água */}
+          <div className="bg-emerald-50/70 border border-emerald-200 p-3.5 rounded-xl flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-emerald-300 bg-white shrink-0 shadow-2xs">
+                <img
+                  src="/fundo-certificado.jpg"
+                  alt="Miniatura Fundo"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  Imagem de Fundo Oficial (Frente e Verso)
+                </p>
+                <p className="text-[10.5px] text-slate-600">
+                  Foto em marca d'água da Praça dos Cristais / Concha Acústica QGEx com a Bandeira Nacional inserida em ambos os lados do certificado gerado.
+                </p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={config.incluirMarcaDagua !== false}
+                onChange={(e) => handleChange('incluirMarcaDagua', e.target.checked)}
+                className="w-4 h-4 text-emerald-600 rounded"
+              />
+              <span className="text-xs font-bold text-slate-800 hidden sm:inline">Ativo nos 2 lados</span>
+            </label>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="font-bold text-slate-700 block mb-1">
